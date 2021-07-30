@@ -1,0 +1,33 @@
+CXX_STD = CXX11
+PKG_CPPFLAGS = -I. -I./ib/
+PKG_LIBS = -L. -lib
+
+IB_OBJECTS = \
+  ./ib/EClient.o \
+  ./ib/EMessage.o \
+  ./ib/ContractCondition.o \
+  ./ib/EDecoder.o \
+  ./ib/DefaultEWrapper.o \
+  ./ib/EOrderDecoder.o \
+  ./ib/executioncondition.o \
+  ./ib/MarginCondition.o \
+  ./ib/OperatorCondition.o \
+  ./ib/OrderCondition.o \
+  ./ib/PercentChangeCondition.o \
+  ./ib/PriceCondition.o \
+  ./ib/SoftDollarTier.o \
+  ./ib/TimeCondition.o \
+  ./ib/VolumeCondition.o
+
+$(SHLIB): libib.a
+
+OBJECTS = cpp11.o RWrapper.o RClient.o r2tws.o tws2r.o rib.o
+$(OBJECTS): libib.a
+
+libib.a: $(IB_OBJECTS)
+	$(AR) rcs libib.a $(IB_OBJECTS)
+
+.PHONY: clean
+clean:
+	rm -f $(IB_OBJECTS) $(OBJECTS) libib.a rib.so
+
