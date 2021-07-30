@@ -18,7 +18,6 @@ RoxygenNote: 7.1.1
 Collate: 
     'constants.R'
     'cpp11.R'
-    'decoder.R'
     'encoder.R'
     'handlers.R'
     'package.R'

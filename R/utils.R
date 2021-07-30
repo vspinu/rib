@@ -69,6 +69,16 @@ catlog <- function(..., .env = parent.frame(), ts_format = TS_FORMAT) {
 }
 
 
+decode_str_msg <- function(bin) {
+  con <- rawConnection(bin, "rb")
+  on.exit(close(con))
+  str <- readBin(con, "character", 32)
+  while (length(str1 <- readBin(con, "character", 32))) {
+    str <- c(str, str1)
+  }
+  str
+}
+
 decode_bin_msg <- function(bin) {
   con <- rawConnection(bin, "rb")
   on.exit(close(con))

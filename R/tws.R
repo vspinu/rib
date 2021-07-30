@@ -19,10 +19,7 @@ TWS <-
           ), 
           
           public = list2(
-            clientId = 123,
-            host = "localhost",
-            port = 4002,
-            tws = NULL, 
+            tws = list(clientId = 1, host = "localhost", port = 4002), 
             handlers = NULL,
             
             data = strlist(),
@@ -41,7 +38,8 @@ TWS <-
               id
             }, 
 
-            open = function(clientId = self$clientId, host = self$host, port = self$port, timeout = 5, read_interval = .1) {
+            open = function(clientId = self$clientId, host = self$host,
+                            port = self$port, timeout = 5, read_interval = .1) {
               tws_connect(self, clientId, host = host, port = port, timeout = timeout)
               tws_process_msgs(self, read_interval = read_interval)
             }, 
@@ -97,7 +95,7 @@ tws_handle_msg <- function(self) {
   withCallingHandlers({
     bin <- read_bin(self$con)
     if (!is.null(bin)) {
-      vals <- C_decode_bin(self$twsServerVersion,  bin)
+      vals <- C_decode_bin(self$serverVersion, bin)
       ix <- 1L
       for (val in vals) {
         msg <- msg(bin, val, ix)
@@ -130,31 +128,30 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
   start_time <- Sys.time()
   con <- socketConnection(host = host, port = port, open = 'ab', blocking = blocking)
   self$con <- con
-  on.exit(self$close(con))
+  on.exit(self$close())
 
   if (!self$isOpen()) { 
-    self$close()
     stop(sprintf("couldn't connect to TWS on '%s:%s'", host, port))
   }
 
   Sys.sleep(0.2)
 
-  client_version <- min(161, C_max_client_version())
-  binversion <- charToRaw(paste0("v100..", client_version))
-  writeBin(c(charToRaw("API"), NULLSTR,
-             bytelen(binversion),
-             binversion),
-           con)
+  client_version <- C_max_client_version()
+  encoder <- encoder()
+  writeBin(C_enc_connectionRequest(encoder), con)
 
   # server version and connection time
   while (TRUE) {
     if (socketSelect(list(con), FALSE, 0.1)) {
       bin <- read_bin(con)
       if (!is.null(bin)) {
-        msg <- hl_decode_str(self, msg(bin))
-        server_version <- as.integer(msg[["id"]])
-        connection_time <- msg[["str"]]
-        catlog("Connected client:{clientId}v{client_version}, server:v{server_version}")
+        tryCatch({
+          bincon <- rawConnection(bin, "rb")
+          server_version <- as.integer(readBin(bincon, "character"))
+          C_set_serverVersion(encoder, server_version)
+          catlog("Connected client:{clientId}v{client_version}, server:v{server_version}")
+        }, finally =
+             base::close(bincon))
         break
       }
     }
@@ -166,24 +163,17 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
 
   on.exit()
 
-  ## ## temporary
-  ## tws <- structure(new.env(), class = c("twsconn", "environment"))
-  ## tws$conn <- con
-  ## tws$clientId <- clientId
-  ## tws$nextValidId <- "1"
-  ## tws$port <- port
-  ## tws$server.version <- server_version
-  ## tws$connected.at <- connection_time
-  ## self$tws <- tws
-  
+  self$encoder <- encoder
   self$clientId <- clientId
-  self$twsClientVersion <- client_version
-  self$twsServerVersion <- server_version
+  self$clientVersion <- client_version
+  self$serverVersion <- server_version
+  self$optionalCapabilities <- optionalCapabilities
   self$host <- host
   self$port <- port
 
-  if (base::isOpen(con))
-    write_str(c(REQ2ID[["START_API"]], "2", clientId, optionalCapabilities), con)
+  if (base::isOpen(con)) {
+    writeBin(C_enc_startApi(encoder, clientId, optionalCapabilities), con)
+  }
 
   self
 }

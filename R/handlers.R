@@ -69,7 +69,7 @@ hl_decode_str <- function(self, msg, ...) {
 ## #' @export
 ## hl_decode_val <- function(self, msg, ...) {
 ##   if (is.null(msg[["val"]])) {
-##     val <- C_decode_bin(self$twsServerVersion, msg[["bin"]])
+##     val <- C_decode_bin(self$serverVersion, msg[["bin"]])
 ##     msg[["event"]] <- val[["event"]]
 ##     msg[["val"]] <- val
 ##   }
