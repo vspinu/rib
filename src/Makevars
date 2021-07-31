@@ -1,33 +1,40 @@
+
 CXX_STD = CXX11
-PKG_CPPFLAGS = -I. -I./ib/
+PKG_CPPFLAGS = -I. -I$(TWS_API_LIB_PATH)
 PKG_LIBS = -L. -lib
 
 IB_OBJECTS = \
-  ./ib/EClient.o \
-  ./ib/EMessage.o \
-  ./ib/ContractCondition.o \
-  ./ib/EDecoder.o \
-  ./ib/DefaultEWrapper.o \
-  ./ib/EOrderDecoder.o \
-  ./ib/executioncondition.o \
-  ./ib/MarginCondition.o \
-  ./ib/OperatorCondition.o \
-  ./ib/OrderCondition.o \
-  ./ib/PercentChangeCondition.o \
-  ./ib/PriceCondition.o \
-  ./ib/SoftDollarTier.o \
-  ./ib/TimeCondition.o \
-  ./ib/VolumeCondition.o
+  $(TWS_API_LIB_PATH)/EClient.o \
+  $(TWS_API_LIB_PATH)/EMessage.o \
+  $(TWS_API_LIB_PATH)/ContractCondition.o \
+  $(TWS_API_LIB_PATH)/EDecoder.o \
+  $(TWS_API_LIB_PATH)/DefaultEWrapper.o \
+  $(TWS_API_LIB_PATH)/EOrderDecoder.o \
+  $(TWS_API_LIB_PATH)/executioncondition.o \
+  $(TWS_API_LIB_PATH)/MarginCondition.o \
+  $(TWS_API_LIB_PATH)/OperatorCondition.o \
+  $(TWS_API_LIB_PATH)/OrderCondition.o \
+  $(TWS_API_LIB_PATH)/PercentChangeCondition.o \
+  $(TWS_API_LIB_PATH)/PriceCondition.o \
+  $(TWS_API_LIB_PATH)/SoftDollarTier.o \
+  $(TWS_API_LIB_PATH)/TimeCondition.o \
+  $(TWS_API_LIB_PATH)/VolumeCondition.o
 
 $(SHLIB): libib.a
 
 OBJECTS = cpp11.o RWrapper.o RClient.o r2tws.o tws2r.o rib.o
 $(OBJECTS): libib.a
 
-libib.a: $(IB_OBJECTS)
+libib.a: $(IB_OBJECTS) version.h
 	$(AR) rcs libib.a $(IB_OBJECTS)
+
+.PHONY: version.h
+version.h:
+	-sed -En '/^const int MIN_SERVER/h; $$x; s/.*= ([0-9]*);/#define MAX_SERVER_VERSION \1/; $$p' \
+		$(TWS_API_LIB_PATH)/EDecoder.h > version.h
 
 .PHONY: clean
 clean:
 	rm -f $(IB_OBJECTS) $(OBJECTS) libib.a rib.so
+
 

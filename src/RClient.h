@@ -6,6 +6,8 @@
 #include "DefaultEWrapper.h"
 #include <vector>
 #include <string>
+#include <type_traits>
+#include "version.h"
 
 #include "cpp11.hpp"
 #include "R_ext/Print.h"
@@ -50,11 +52,25 @@ class RClient : public EClient {
 	sendConnectRequest();
   }
 
+  using EClient::sendConnectRequest;
+
  protected:
   virtual bool closeAndSend(std::string msg, unsigned offset = 0);
   virtual void prepareBuffer(std::ostream&) const;
   virtual void prepareBufferImpl(std::ostream&) const;
   virtual int bufferedSend(const std::string& msg);
+
+ public:
+
+#define STOP(X) {cpp11::stop("'%s' not available with your version of TWS-API", X);}
+
+#if MAX_SERVER_VERSION < 161
+  void reqWshMetaData(int reqId) STOP("reqWshMetaData");
+  void reqWshEventData(int reqId, int conId) STOP("reqWshEventData");
+  void cancelWshMetaData(int reqId) STOP("cancelWshMetaData");
+  void cancelWshEventData(int reqId) STOP("cancelWshEventData");
+#endif
+
 };
 
 struct REncoder {
