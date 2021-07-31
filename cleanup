@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -f src/*.so src/*.dylib src/*.o src/libib.a rib*.tar.gz
+(cd src; make -f Makevars clean)
