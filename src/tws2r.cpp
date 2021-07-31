@@ -96,8 +96,9 @@ lst RWrapper::RContractDetails(const ContractDetails& cd) {
 	  "marketRuleIds"_nm = cd.marketRuleIds,
 	  "realExpirationDate"_nm = cd.realExpirationDate,
 	  "lastTradeTime"_nm = cd.lastTradeTime,
+#if MAX_SERVER_VERSION >= 156
 	  "stockType"_nm = cd.stockType,
-
+#endif
 	  //Todo
 	  /* TagValueListSPtr secIdList; */
 
@@ -314,8 +315,12 @@ lst RWrapper::ROrder(const Order& order) {
 	  "routeMarketableToBbo"_nm = order.routeMarketableToBbo,
 	  "parentPermId"_nm = order.parentPermId,
 	  "usePriceMgmtAlgo"_nm = RUsePriceMmgtAlgo(order.usePriceMgmtAlgo),
+#if MAX_SERVER_VERSION >= 157
 	  "duration"_nm = order.duration,
+#endif
+#if MAX_SERVER_VERSION >= 160
 	  "postToAts"_nm = order.postToAts
+#endif
 	});
 }
 

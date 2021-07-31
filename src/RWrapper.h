@@ -21,8 +21,9 @@ using wdf = cpp11::writable::data_frame;
 
 struct RWrapper : public EWrapper {
 #include "EWrapper_prototypes.h"
-
  
+  std::vector<lst> acc;
+
   lst RContract(const Contract& contract);
   lst ROrder(const Order& order);
   lst ROrderState(const OrderState& os);
@@ -30,7 +31,7 @@ struct RWrapper : public EWrapper {
   lst RExecution(const Execution& e);
   lst RBar(const Bar& bar);
   lst RContractDescription(const ContractDescription& cd);
-  
-  std::vector<lst> acc;
+
+
 };
 

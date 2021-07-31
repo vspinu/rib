@@ -239,8 +239,12 @@ Order twsOrder(lst in) {
   else if (NMEQ("imbalanceOnly")) setcpp(out.imbalanceOnly, in[i]);
   else if (NMEQ("routeMarketableToBbo")) setcpp(out.routeMarketableToBbo, in[i]);
   else if (NMEQ("parentPermId")) setcpp(out.parentPermId, in[i]);
+#if MAX_SERVER_VERSION >= 157
   else if (NMEQ("duration")) setcpp(out.duration, in[i]);
+#endif
+#if MAX_SERVER_VERSION >= 160
   else if (NMEQ("postToAts")) setcpp(out.postToAts, in[i]);
+#endif
   else if (NMEQ("softDollarTier")) out.softDollarTier = twsSoftDollarTier(in[i]);
   else if (NMEQ("algoParams")) out.algoParams = twsTagValueListSPtr(in[i]);
   else if (NMEQ("smartComboRoutingParams")) out.smartComboRoutingParams = twsTagValueListSPtr(in[i]);

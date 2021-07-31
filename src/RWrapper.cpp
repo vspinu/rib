@@ -1,6 +1,13 @@
 
+#include "version.h"
 #include "RWrapper.h"
 #include "CommonDefs.h"
+
+#if MAX_SERVER_VERSION >= 160
+using SizeType = long long;
+#else
+using SizeType = int;
+#endif
 
 std::unordered_map<TickType, std::string> tickType2Name({
 	{BID_SIZE, "BID_SIZE"},
@@ -93,6 +100,7 @@ std::unordered_map<TickType, std::string> tickType2Name({
 	{AVG_OPT_VOLUME, "AVG_OPT_VOLUME"},
 	{DELAYED_LAST_TIMESTAMP, "DELAYED_LAST_TIMESTAMP"},
 	{SHORTABLE_SHARES, "SHORTABLE_SHARES"},
+#if MAX_SERVER_VERSION > 160
 	{DELAYED_HALTED, "DELAYED_HALTED"},
 	{REUTERS_2_MUTUAL_FUNDS, "REUTERS_2_MUTUAL_FUNDS"},
 	{ETF_NAV_CLOSE, "ETF_NAV_CLOSE"},
@@ -103,6 +111,7 @@ std::unordered_map<TickType, std::string> tickType2Name({
 	{ETF_FROZEN_NAV_LAST, "ETF_FROZEN_NAV_LAST"},
 	{ETF_NAV_HIGH, "ETF_NAV_HIGH"},
 	{ETF_NAV_LOW, "ETF_NAV_LOW"},
+#endif
 	{NOT_SET, "NOT_SET"}
   });
 
@@ -121,7 +130,7 @@ void RWrapper::tickPrice(TickerId tickerId, TickType field, double price,
 	}));
 }
 
-void RWrapper::tickSize(TickerId tickerId, TickType field, long long size) {
+void RWrapper::tickSize(TickerId tickerId, TickType field, SizeType size) {
   acc.push_back(lst({
 		"event"_nm = "tickSize",
 		"reqId"_nm = tickerId,
@@ -130,7 +139,10 @@ void RWrapper::tickSize(TickerId tickerId, TickType field, long long size) {
 	  }));
 }
 
-void RWrapper::tickOptionComputation(TickerId tickerId, TickType tickType, int tickAttrib,
+void RWrapper::tickOptionComputation(TickerId tickerId, TickType tickType,
+#if MAX_SERVER_VERSION >= 156
+									 int tickAttrib,
+#endif
 									 double impliedVol, double delta,
 									 double optPrice, double pvDividend, double gamma,
 									 double vega, double theta, double undPrice) {
@@ -138,7 +150,9 @@ void RWrapper::tickOptionComputation(TickerId tickerId, TickType tickType, int t
 		"event"_nm = "tickOptionComputation",
 		"reqId"_nm = tickerId,
 		"type"_nm = tickType2Name[tickType],
+#if MAX_SERVER_VERSION >= 156
 		"attrib"_nm = tickAttrib,
+#endif
 		"impliedVol"_nm = impliedVol,
 		"delta"_nm = delta,
 		"optPrice"_nm = optPrice,
@@ -327,7 +341,7 @@ void RWrapper::error(int id, int errorCode, const std::string& errorString) {;
 }
 
 void RWrapper::updateMktDepth(TickerId id, int position, int operation, int side,
-							  double price, long long size) {
+							  double price, SizeType size) {
   acc.push_back(lst({
 		"event"_nm = "updateMktDepth",
 		"reqId"_nm = id,
@@ -340,7 +354,7 @@ void RWrapper::updateMktDepth(TickerId id, int position, int operation, int side
 }
 
 void RWrapper::updateMktDepthL2(TickerId id, int position, const std::string& marketMaker,
-								int operation, int side, double price, long long size,
+								int operation, int side, double price, SizeType size,
 								bool isSmartDepth) {
   acc.push_back(lst({
 		"event"_nm = "updateMktDepthL2",
@@ -989,7 +1003,7 @@ void RWrapper::historicalTicksLast(int reqId,
 }
 
 void RWrapper::tickByTickAllLast(int reqId, int tickType, time_t time,
-								 double price, long long size,
+								 double price, SizeType size,
 								 const TickAttribLast& tickAttribLast,
 								 const std::string& exchange,
 								 const std::string& specialConditions) {
@@ -1007,9 +1021,9 @@ void RWrapper::tickByTickAllLast(int reqId, int tickType, time_t time,
 	  }));
 }
 
-void RWrapper::tickByTickBidAsk(int reqId, time_t time, double bidPrice, 
-								double askPrice, long long bidSize, 
-								long long askSize,
+void RWrapper::tickByTickBidAsk(int reqId, time_t time,
+								double bidPrice, double askPrice,
+								SizeType bidSize, SizeType askSize,
 								const TickAttribBidAsk& tickAttribBidAsk) {
   acc.push_back(lst({
 		"event"_nm = "tickByTickBidAsk",
@@ -1058,6 +1072,7 @@ void RWrapper::completedOrdersEnd() {
 	  }));
 }
 
+#if MAX_SERVER_VERSION >= 157
 void RWrapper::replaceFAEnd(int reqId, const std::string& text) {
   acc.push_back(lst({
 		"event"_nm = "replaceFAEnd",
@@ -1065,7 +1080,9 @@ void RWrapper::replaceFAEnd(int reqId, const std::string& text) {
 		"text"_nm = text,
 	  }));
 }
+#endif
 
+#if MAX_SERVER_VERSION >= 161
 void RWrapper::wshMetaData(int reqId, const std::string& dataJson) {
   acc.push_back(lst({
 		"event"_nm = "wshMetaData",
@@ -1081,6 +1098,7 @@ void RWrapper::wshEventData(int reqId, const std::string& dataJson) {
 		"dataJson"_nm = dataJson,
 	  }));
 }
+#endif
 
 
 /// Unused

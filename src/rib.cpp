@@ -1,3 +1,12 @@
+/*
+ * Max Server Versions:
+ * 976.01 -> 151
+ * 979.01 -> 156
+ * 980.03 -> 157
+ * 985.01 -> 157
+ * 985.1  -> 160
+*/
+
 
 #include "RWrapper.h"
 #include "EDecoder.h"
@@ -369,10 +378,16 @@ cpp11::raws C_enc_requestFA(PREncoder encoder, const std::string& faDataType) {
 }
 
 [[cpp11::register]]
-cpp11::raws C_enc_replaceFA(PREncoder encoder, int reqId, const std::string& faDataType,
+cpp11::raws C_enc_replaceFA(PREncoder encoder, int reqId,
+							const std::string& faDataType,
 							const std::string& xml) {
   BEG;
-  client.replaceFA(reqId, twsFaDataType(faDataType), xml);
+  client.replaceFA(
+#if MAX_SERVER_VERSION >= 157
+	reqId,
+#endif
+	twsFaDataType(faDataType),
+	xml);
   END;
 }
 

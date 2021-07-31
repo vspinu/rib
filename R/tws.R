@@ -1,4 +1,4 @@
-#' @include encoder.R decoder.R utils.R
+#' @include encoder.R utils.R
 NULL
 
 #' @export
@@ -136,7 +136,7 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
 
   Sys.sleep(0.2)
 
-  client_version <- C_max_client_version()
+  clientVersion <- C_max_clientVersion()
   encoder <- encoder()
   writeBin(C_enc_connectionRequest(encoder), con)
 
@@ -147,9 +147,9 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
       if (!is.null(bin)) {
         tryCatch({
           bincon <- rawConnection(bin, "rb")
-          server_version <- as.integer(readBin(bincon, "character"))
-          C_set_serverVersion(encoder, server_version)
-          catlog("Connected client:{clientId}v{client_version}, server:v{server_version}")
+          serverVersion <- as.integer(readBin(bincon, "character"))
+          C_set_serverVersion(encoder, serverVersion)
+          catlog("Connected client:{clientId}v{clientVersion}, server:v{serverVersion}")
         }, finally =
              base::close(bincon))
         break
@@ -165,8 +165,8 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
 
   self$encoder <- encoder
   self$clientId <- clientId
-  self$clientVersion <- client_version
-  self$serverVersion <- server_version
+  self$clientVersion <- clientVersion
+  self$serverVersion <- serverVersion
   self$optionalCapabilities <- optionalCapabilities
   self$host <- host
   self$port <- port
@@ -191,7 +191,7 @@ tws_handle_connection_error <- function(con) {
 
 
 
-### Connection reader/writer
+### Connection read-write
 
 bytelen <- function(x) {
   as.raw(bitwShiftR(length(x), c(24, 16, 8, 0)))
@@ -212,15 +212,6 @@ read_bin <- function(con) {
   }
   on.exit()
   out
-}
-
-write_str <- function(str, con) {
-  if (base::isOpen(con)) {
-    raw <- do.call(c, lapply(as.character(str),
-                             function(s) c(charToRaw(s), NULLSTR)))
-    writeBin(bytelen(raw), con)
-    writeBin(raw, con)
-  }
 }
 
 msg <- function(bin, val = NULL, ix = 1L) {
