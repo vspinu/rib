@@ -37,7 +37,8 @@ hl_recorder <- function(file = stdout(), type = c("str", "val"), ts_format = TS_
         if (type == "str") msg[["str"]]
         else gsub("list", "", as.character(list(msg[["val"]])), fixed = TRUE)
       ts <- format.POSIXct(msg$ts, ts_format, usetz = FALSE)
-      cat(ts, event, msg$id, str, "\n", file = file, append = TRUE)
+      inout <- if (identical(class(msg)[[1]], "outmsg")) "<--" else "-->"
+      cat(ts, inout, event, msg$id, str, "\n", file = file, append = TRUE)
     }
     msg
   }

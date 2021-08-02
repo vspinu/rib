@@ -9,65 +9,72 @@ check_named_list <- function(x) {
   as.list(x)
 } 
 
-## This brings 2-3x overhead. TODO: refactor all functions place with new_function ...
-dispatch_encoder <- function(name) {
-  fn <- sys.function(sys.parent(1))
-  cl <- sys.call(sys.parent(1L))
-  nms <- names(formals(fn))[-1]
-  args <- structure(lapply(nms, as.name), names = nms)
-  cname <- paste0("C_", substitute(name))
-  call <- rlang::call2(cname, quote(self$encoder), !!!args)
-  eval(call, parent.frame())
-}
-
 ##' enc_reqMktData()
 # https://interactivebrokers.github.io/tws-api/md_request.html
 # https://interactivebrokers.github.io/tws-api/classIBApi_1_1EClient.html#a7a19258a3a2087c07c1c57b93f659b63
 enc_reqMktData <- function(self, contract, 
-                           genericTicks = '100,101,104,106,165,221,225,236',
+                           genericTicks = "100,101,104,106,165,221,225,236",
                            snapshot = FALSE,
                            regulatorySnaphsot = FALSE,
                            mktDataOptions = list(), 
                            reqId = self$nextId()) {
-  mktDataOptions <- check_named_list(mktDataOptions)
-  dispatch_encoder(enc_reqMktData)
+  C_enc_reqMktData(self$encoder,
+                   reqId = reqId, 
+                   contract = contract, 
+                   genericTicks = genericTicks,
+                   snapshot = snapshot,
+                   regulatorySnaphsot = regulatorySnaphsot,
+                   mktDataOptions = check_named_list(mktDataOptions))
 }
 
 enc_cancelMktData <- function(self, reqId) {
-  dispatch_encoder(enc_cancelMktData)
+  C_enc_cancelMktData(self$encoder, reqId = reqId)
 }
 
 enc_reqMktDepth <- function(self, contract, numRows = 20, isSmartDepth = FALSE,
                             mktDepthOptions = list(), reqId = self$nextId()) {
-  mktDataOptions <- check_named_list(mktDataOptions)
-  dispatch_encoder(enc_reqMktDepth)
+  C_enc_reqMktDepth(self$encoder,
+                    reqId = reqId, 
+                    contract = contract,
+                    numRows = numRows,
+                    isSmartDepth = isSmartDepth,
+                    mktDepthOptions = check_named_list(mktDataOptions))
 }
 
 enc_cancelMktDepth <- function(self, reqId, isSmartDepth = FALSE) {
-  dispatch_encoder(enc_cancelMktDepth)
+  C_enc_cancelMktDepth(self$encoder, reqId = reqId, isSmartDepth = isSmartDepth)
 }
 
-enc_reqHistoricalData <-
-  function(self, contract,
-           endDateTime = NULL,
-           durationStr = "1 M",
-           barSizeSetting = BAR_SIZE_TYPES,
-           whatToShow = WHAT_TO_SHOW_TYPES,
-           useRTH = TRUE,
-           formatDate = TRUE,
-           keepUpToDate = FALSE,
-           chartOptions = list(),
-           reqId = self$nextId()) {
-    whatToShow <- match.arg(whatToShow)
-    endDateTime <-
-      if (is.null(endDateTime)) now() + 100
-      else as_datetime(endDateTime)
-    endDateTime <-  strftime(endDateTime, format='%Y%m%d %H:%M:%S', usetz = FALSE)
-    dispatch_encoder(enc_reqHistoricalData)
-  }
+enc_reqHistoricalData <- function(self, contract,
+                                  endDateTime = NULL,
+                                  durationStr = "1 M",
+                                  barSizeSetting = BAR_SIZE_TYPES,
+                                  whatToShow = WHAT_TO_SHOW_TYPES,
+                                  useRTH = TRUE,
+                                  formatDate = TRUE,
+                                  keepUpToDate = FALSE,
+                                  chartOptions = list(),
+                                  reqId = self$nextId()) {
+  whatToShow <- match.arg(whatToShow)
+  endDateTime <-
+    if (is.null(endDateTime)) now() + 100
+    else as_datetime(endDateTime)
+  endDateTime <- strftime(endDateTime, format='%Y%m%d %H:%M:%S', usetz = FALSE)
+  enc_reqHistoricalData(self$encoder,
+                        reqId = reqId, 
+                        contract = contract, 
+                        endDateTime = endDateTime, 
+                        durationStr = durationStr, 
+                        barSizeSetting = barSizeSetting, 
+                        whatToShow = whatToShow, 
+                        useRTH = useRTH, 
+                        formatDate = formatDate, 
+                        keepUpToDate = keepUpToDate, 
+                        chartOptions = chartOptions)
+}
 
 enc_cancelHistoricalData <- function(self, reqId) {
-  dispatch_encoder(enc_cancelHistoricalData)
+  C_enc_cancelHistoricalData(self$encoder, reqId = reqId)
 }
 
 enc_reqRealTimeBars <- function(self, contract, barSize = 5,
@@ -75,8 +82,13 @@ enc_reqRealTimeBars <- function(self, contract, barSize = 5,
                                 useRTH = TRUE,
                                 realTimeBarsOptions = list(), 
                                 reqId = self$nextId()) {
-  realTimeBarsOptions <- check_named_list(realTimeBarsOptions)
-  dispatch_encoder(enc_reqRealTimeBars)
+  C_enc_reqRealTimeBars(self$encoder,
+                        reqId = reqId, 
+                        contract = contract,
+                        barSize = barSize,
+                        whatToShow = match.arg(whatToShow),
+                        useRTH = useRTH,
+                        realTimeBarsOptions = check_named_list(realTimeBarsOptions))
 }
 
 enc_cancelRealTimeBars <- function(self, reqId) {
@@ -106,13 +118,15 @@ enc_cancelScannerSubscription <- function(self, reqId) {
 enc_reqFundamentalData <- function(self, contract, reportType = TWS_REPORT_TYPES,
                                    fundamentalDataOptions = list(),
                                    reqId = self$nextId()) {
-  reportType <- match.arg(reportType)
-  fundamentalDataOptions <- check_named_list(fundamentalDataOptions)
-  dispatch_encoder(enc_reqFundamentalData)
+  C_enc_reqFundamentalData(self$encoder,
+                           reqId = reqId, 
+                           contract = contract,
+                           reportType = match.arg(reportType),
+                           fundamentalDataOptions = check_named_list(fundamentalDataOptions))
 }
 
 enc_cancelFundamentalData <- function(self, reqId) {
-  dispatch_encoder(enc_cancelFundamentalData)
+  C_enc_cancelFundamentalData(self$encoder, reqId = reqId)
 }
 
 enc_calculateImpliedVolatility <- function(self, contract, optionPrice, underPrice, options = list(), reqId = self$nextId()) {
@@ -134,7 +148,7 @@ enc_cancelCalculateOptionPrice <- function(self, reqId) {
 }
 
 enc_reqContractDetails <- function(self, contract, reqId = self$nextId()) {
-  dispatch_encoder(enc_reqContractDetails)
+  C_enc_reqContractDetails(self$encoder, reqId = reqId, contract = contract)
 }
 
 enc_reqCurrentTime <- function(self) {
@@ -150,11 +164,11 @@ enc_cancelOrder <- function(self, id) {
 }
 
 enc_reqAccountUpdates <- function(self, accountCode = "1") {
-  dispatch_encoder(enc_reqAccountUpdates)
+  C_enc_reqAccountUpdates(self$encoder, accountCode = accountCode)
 }
 
 enc_cancelAccountUpdates <- function(self, accountCode = "1") {
-  dispatch_encoder(enc_cancelAccountUpdates)
+  C_enc_cancelAccountUpdates(self$encoder, accountCode = accountCode)
 }
 
 enc_reqOpenOrders <- function(self) {
@@ -417,16 +431,18 @@ enc_cancelWshEventData <- function(self, reqId) {
 
 
 ENC_NAMES <- ls(pattern = "^enc_")
-ENC_FUNCTIONS <-
+REQ_FUNCTIONS <-
   structure(map(ENC_NAMES,
                 function(nm) {
                   fmls <- formals(getFunction(nm))[-1]
                   args <- structure(map(names(fmls), as.name), names = names(fmls))
-                  cl <- call2(nm, as.name("self"), !!!args)
+                  lst <- call2("list", !!!args)
                   out_val <- if ('reqId' %in% names(fmls)) as.name("reqId")
+                  event <- sub("enc_", "", nm)
+                  encoder <- parse_expr(sprintf("rib:::%s", nm))
                   fn <- new_function(fmls, body = expr({
-                    bin <- !!cl
-                    writeBin(bin, self$con)
+                    msg <- !!lst
+                    tws_handle_outmsg(self, !!event, !!encoder, msg)
                     invisible(!!out_val)
                   }))
                   fn

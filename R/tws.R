@@ -2,11 +2,17 @@
 NULL
 
 #' @export
-tws <- function(symbols = "EURUSD",
-                handlers = "hl_record_stdout",
-                host = "localhost", port = 4002,
+tws <- function(host = "localhost",
+                port = c("gwpaper", "gwprod", "twspaper", "twsprod"),
+                inHandlers = "hl_record_stdout",
+                outHandlers = "hl_record_stdout",
                 ...) {
-  TWS$new(symbols = symbols, handlers = handlers,
+  if (is.character(port)) {
+    port <- match.arg(port)
+    port <- c("gwpaper" = 4002, "gwprod" = 4001,
+              "twspaper" = 7497, "twsprod" = 7496)[[port]]
+  }
+  TWS$new(inHandlers = inHandlers, outHandlers = outHandlers,
           host = host, port = port, ...)
 }
 
@@ -19,16 +25,22 @@ TWS <-
           ), 
           
           public = list2(
-            tws = list(clientId = 1, host = "localhost", port = 4002), 
-            handlers = NULL,
+            clientId = 1,
+            host = "localhost",
+            port = 4002, 
+            inHandlers = NULL,
+            outHandlers = NULL,
             
             data = strlist(),
             record = TRUE,
 
-            initialize = function(handlers, ...) {
-              if (is.function(handlers))
-                handlers <- list(handlers)
-              self$handlers <- handlers
+            initialize = function(inHandlers, outHandlers, ...) {
+              if (is.function(inHandlers))
+                inHandlers <- list(inHandlers)
+              if (is.function(outHandlers))
+                outHandlers <- list(outHandlers)
+              self$inHandlers <- inHandlers
+              self$outHandlers <- outHandlers
               list2env(list2(...), self)
             },
 
@@ -49,7 +61,7 @@ TWS <-
                 try({
                   base::close(self$con)
                   catlog("Disconnected client:{self$clientId} {self$host}:{self$port}")
-                  }, silent = T)
+                }, silent = T)
               }
             }, 
 
@@ -59,7 +71,7 @@ TWS <-
               tryCatch(base::isOpen(self$con), error = function(e) FALSE)
             },
 
-            !!!ENC_FUNCTIONS
+            !!!REQ_FUNCTIONS
           ))
 
 tws_process_msgs <- function(self, read_interval = .1) {
@@ -69,7 +81,7 @@ tws_process_msgs <- function(self, read_interval = .1) {
       while (self$isOpen()) {
         if (!socketSelect(list(con), FALSE, 0.25))
           next
-        tws_handle_msg(self)
+        tws_handle_inmsg(self)
       }
     } else {
       tws_later_scheduler(self, read_interval)
@@ -83,7 +95,7 @@ tws_process_msgs <- function(self, read_interval = .1) {
 tws_later_scheduler <- function(self, read_interval = .1) {
   executor <-
     function() {
-      while (self$isOpen() && tws_handle_msg(self)) {
+      while (self$isOpen() && tws_handle_inmsg(self)) {
       }
       if (self$isOpen())
         later::later(executor, delay = read_interval)
@@ -91,15 +103,20 @@ tws_later_scheduler <- function(self, read_interval = .1) {
   executor()
 }
 
-tws_handle_msg <- function(self) {
+tws_handle_inmsg <- function(self) {
   withCallingHandlers({
     bin <- read_bin(self$con)
     if (!is.null(bin)) {
       vals <- C_decode_bin(self$serverVersion, bin)
       ix <- 1L
       for (val in vals) {
-        msg <- msg(bin, val, ix)
-        for (hl in self$handlers) {
+        msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
+                              ix = ix,
+                              bin = bin,
+                              event = val[["event"]], 
+                              val = val),
+                         class = c("inmsg", "strlist"))
+        for (hl in self$inHandlers) {
           msg <- do.call(hl, list(self, msg))
           if (is.null(msg)) break
         }
@@ -113,6 +130,31 @@ tws_handle_msg <- function(self) {
     stop(err)
   })
   !is.null(bin)
+}
+
+tws_handle_outmsg <- function(self, event, encoder, val) {
+  withCallingHandlers({
+    if (length(self$outHandlers) > 0) {
+      msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
+                            event = event,
+                            val = val),
+                       class = c("outmsg", "strlist"))
+      for (hl in self$outHandlers) {
+        msg <- do.call(hl, list(self, msg))
+        if (is.null(msg)) break
+      }
+      if (!is.null(msg)) {
+        bin <- do.call(encoder, c(self, msg$val))
+      }
+    } else {
+      bin <- do.call(encoder, c(self, val))
+    }
+    writeBin(bin, self$con)
+  }, 
+  error = function(err) {
+    print(rlang::trace_back())
+    stop(err)
+  })
 }
 
 tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
@@ -136,7 +178,7 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
 
   Sys.sleep(0.2)
 
-  clientVersion <- C_max_clientVersion()
+  clientVersion <- C_max_client_version()
   encoder <- encoder()
   writeBin(C_enc_connectionRequest(encoder), con)
 
@@ -212,12 +254,4 @@ read_bin <- function(con) {
   }
   on.exit()
   out
-}
-
-msg <- function(bin, val = NULL, ix = 1L) {
-  list(ts = .POSIXct(Sys.time(), tz = "UTC"),
-       ix = ix,
-       bin = bin,
-       event = val[["event"]], 
-       val = val)
 }
