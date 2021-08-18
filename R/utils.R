@@ -21,20 +21,23 @@ print.strlist <- function(x, ...) {
 
 #' @export
 str.strlist <- function(object, give.attr = F, give.head = F, no.list = T,
+                        digits.d = getOption("digits", 6), 
                         indent.str = "", nest.lev = 0, vec.len = 20, ...) {
-  cat(indent.str, "[", paste(class(object), collapse = " "), "] ", sep = "")
+  cat("[", paste(class(object), collapse = " "), "]\n", sep = "")
   str(unclass(object), give.attr = give.attr, give.head = F, nest.lev = nest.lev,
-      no.list = no.list, vec.len = vec.len, ...)
+      digits.d = digits.d, no.list = no.list, vec.len = vec.len, ...)
 }
 
 as_strlist <- function(x) structure(as.list(x), class = "strlist")
 
 #' @export
 str.strenv <- function(object, give.attr = F, give.head = F, no.list = T,
+                       digits.d = getOption("digits", 6), 
                        indent.str = "", nest.lev = 0, ...) {
-  cat("[strenv] ")
+  cat("[", paste(class(object), collapse = " "), "]\n", sep = "")
   obj <- as.list(object, all.names = T)
-  str(obj, give.attr = give.attr, give.head = F, nest.lev = nest.lev,  no.list = no.list, ...)
+  str(obj, give.attr = give.attr, give.head = F,
+      digits.d = digits.d, nest.lev = nest.lev,  no.list = no.list, ...)
 }
 
 stdfenv2dt <- function(x) {
