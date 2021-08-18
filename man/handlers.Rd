@@ -3,15 +3,21 @@
 \name{handlers}
 \alias{handlers}
 \alias{hl_recorder}
-\alias{hl_record_stdout}
+\alias{hl_record_stdout_str}
+\alias{hl_record_stdout_val}
 \alias{hl_decode_str}
+\alias{hl_track_requests}
 \title{IB Handlers}
 \usage{
 hl_recorder(file = stdout(), type = c("str", "val"), ts_format = TS_FORMAT)
 
-hl_record_stdout(self, msg, ...)
+hl_record_stdout_str(self, msg)
 
-hl_decode_str(self, msg, ...)
+hl_record_stdout_val(self, msg)
+
+hl_decode_str(self, msg)
+
+hl_track_requests(self, msg)
 }
 \arguments{
 \item{file}{file to store the output, by default \code{\link[=stdout]{stdout()}}}
@@ -29,9 +35,9 @@ initial message contains the following element
 }
 \description{
 When the \code{TWS} R client receives a message from the \code{TWS} server, each
-messaged is processed in turn by the handlers in the handler pipeline
-(\code{handlers} argument of \code{\link[=tws]{tws()}} function). Handlers are functions that take
-two arguments - \code{TWS} R client object and a message. A handler should modify
-and return the message. If a handler return NULL, the message is not passed
-to the remaining handlers.
+messaged is processed in turn by the pipeline handlers (\code{inHandlers} and
+\code{outHandlers} argument of \code{\link[=tws]{tws()}} constructor). Handlers are functions that
+take two arguments - \code{tws} client object and a message (a list). A handler
+should modify and return the message. If a handler returns NULL, the message
+will not be passed to the remaining handlers.
 }

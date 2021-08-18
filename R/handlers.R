@@ -1,11 +1,11 @@
 #' IB Handlers
 #'
 #' When the `TWS` R client receives a message from the `TWS` server, each
-#' messaged is processed in turn by the handlers in the handler pipeline
-#' (`handlers` argument of [`tws()`] function). Handlers are functions that take
-#' two arguments - `TWS` R client object and a message. A handler should modify
-#' and return the message. If a handler return NULL, the message is not passed
-#' to the remaining handlers.
+#' messaged is processed in turn by the pipeline handlers (`inHandlers` and
+#' `outHandlers` argument of [`tws()`] constructor). Handlers are functions that
+#' take two arguments - `tws` client object and a message (a list). A handler
+#' should modify and return the message. If a handler returns NULL, the message
+#' will not be passed to the remaining handlers.
 #'
 #' @name handlers
 #' @param self `TWS` R client object created with [`tws()`] constructor.
@@ -18,6 +18,13 @@
 #' 
 NULL
 
+is_outmsg <- function(msg) {
+  identical(class(msg)[[1]], "outmsg")
+}
+
+is_inmsg <- function(msg) {
+  identical(class(msg)[[1]], "inmsg")
+}
 
 #' @param file file to store the output, by default [`stdout()`]
 #' @param ts_format format for timestamps
@@ -25,19 +32,22 @@ NULL
 #' @export
 hl_recorder <- function(file = stdout(), type = c("str", "val"), ts_format = TS_FORMAT) {
   type <- match.arg(type)
-  function(self, msg, ...) {
+  function(self, msg) {
     if (self$record) {
       if (type == "str" && is.null(msg[["str"]])) {
-        msg <- hl_decode_str(self, msg, ...)
+        msg <- hl_decode_str(self, msg)
       }
       event <- msg$event
-      if (identical(event, "error"))
-        event <- if (msg[["val"]][["reqId"]] == -1) "INFO" else "ERROR"
       str <-
-        if (type == "str") msg[["str"]]
-        else gsub("list", "", as.character(list(msg[["val"]])), fixed = TRUE)
+        if (type == "str") {
+          msg[["str"]]
+        } else {
+          val <- as.list(msg[["val"]])
+          val[["event"]] <- NULL
+          gsub("list", "", as.character(list(val)), fixed = TRUE)
+        }
       ts <- format.POSIXct(msg$ts, ts_format, usetz = FALSE)
-      inout <- if (identical(class(msg)[[1]], "outmsg")) "<--" else "-->"
+      inout <- if (is_outmsg(msg)) "<-" else "->"
       cat(ts, inout, event, msg$id, str, "\n", file = file, append = TRUE)
     }
     msg
@@ -46,11 +56,15 @@ hl_recorder <- function(file = stdout(), type = c("str", "val"), ts_format = TS_
 
 #' @rdname handlers
 #' @export
-hl_record_stdout <- hl_recorder()
+hl_record_stdout_str <- hl_recorder(type = "str")
 
 #' @rdname handlers
 #' @export
-hl_decode_str <- function(self, msg, ...) {
+hl_record_stdout_val <- hl_recorder(type = "val")
+
+#' @rdname handlers
+#' @export
+hl_decode_str <- function(self, msg) {
   if (is.null(msg[["str"]]) && !is.null(msg[["bin"]])) {
     con <- rawConnection(msg$bin, "rb")
     id <- readBin(con, "character")
@@ -66,14 +80,20 @@ hl_decode_str <- function(self, msg, ...) {
   msg
 }
 
-## #' @rdname handlers
-## #' @export
-## hl_decode_val <- function(self, msg, ...) {
-##   if (is.null(msg[["val"]])) {
-##     val <- C_decode_bin(self$serverVersion, msg[["bin"]])
-##     msg[["event"]] <- val[["event"]]
-##     msg[["val"]] <- val
-##   }
-##   msg
-## }
-
+#' @rdname handlers
+#' @export
+hl_track_requests <- function(self, msg) {
+  if (!is.null(msg$val$reqId)) {
+    if (is.null(self$requests))
+      self$requests <- strenv(parent = self)
+    id <- as.character(msg$val$reqId)
+    if (is_outmsg(msg)) {
+      self$requests[[id]] <- msg
+    } else {
+      if (grepl("End$", msg$event)) {
+        self$requests[[id]] <- NULL
+      }
+    }
+  }
+  msg
+}

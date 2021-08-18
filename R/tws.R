@@ -4,8 +4,8 @@ NULL
 #' @export
 tws <- function(host = "localhost",
                 port = c("gwpaper", "gwprod", "twspaper", "twsprod"),
-                inHandlers = "hl_record_stdout",
-                outHandlers = "hl_record_stdout",
+                inHandlers = "hl_record_stdout_val",
+                outHandlers = "hl_record_stdout_val",
                 ...) {
   if (is.character(port)) {
     port <- match.arg(port)
@@ -33,6 +33,11 @@ TWS <-
             
             data = strlist(),
             record = TRUE,
+
+            requests = strenv(),
+            reqval = function(reqId) {
+              self$requests[[as.character(reqId)]]$val
+            }, 
 
             initialize = function(inHandlers, outHandlers, ...) {
               if (is.function(inHandlers))
