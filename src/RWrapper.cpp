@@ -115,11 +115,11 @@ std::unordered_map<TickType, std::string> tickType2Name({
 	{NOT_SET, "NOT_SET"}
   });
 
-void RWrapper::tickPrice(TickerId tickerId, TickType field, double price,
+void RWrapper::tickPrice(TickerId reqId, TickType field, double price,
 						 const TickAttrib& attribs) {
   acc.push_back(lst({
 		"event"_nm = "tickPrice",
-		"reqId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"type"_nm = tickType2Name[field],
 		"price"_nm = price,
 		"atrribs"_nm = lst({
@@ -130,16 +130,16 @@ void RWrapper::tickPrice(TickerId tickerId, TickType field, double price,
 	}));
 }
 
-void RWrapper::tickSize(TickerId tickerId, TickType field, SizeType size) {
+void RWrapper::tickSize(TickerId reqId, TickType field, SizeType size) {
   acc.push_back(lst({
 		"event"_nm = "tickSize",
-		"reqId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"type"_nm = tickType2Name[field],
 		"size"_nm = size
 	  }));
 }
 
-void RWrapper::tickOptionComputation(TickerId tickerId, TickType tickType,
+void RWrapper::tickOptionComputation(TickerId reqId, TickType tickType,
 #if MAX_SERVER_VERSION >= 156
 									 int tickAttrib,
 #endif
@@ -148,7 +148,7 @@ void RWrapper::tickOptionComputation(TickerId tickerId, TickType tickType,
 									 double vega, double theta, double undPrice) {
   acc.push_back(lst({
 		"event"_nm = "tickOptionComputation",
-		"reqId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"type"_nm = tickType2Name[tickType],
 #if MAX_SERVER_VERSION >= 156
 		"attrib"_nm = tickAttrib,
@@ -164,31 +164,31 @@ void RWrapper::tickOptionComputation(TickerId tickerId, TickType tickType,
 	  }));
 }
 
-void RWrapper::tickGeneric(TickerId tickerId, TickType tickType, double value) {
+void RWrapper::tickGeneric(TickerId reqId, TickType tickType, double value) {
   acc.push_back(lst({
 		"event"_nm = "tickGeneric",
-		"reqId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"type"_nm = tickType2Name[tickType],
 		"value"_nm = value
 	  }));
 }
 
-void RWrapper::tickString(TickerId tickerId, TickType tickType, const std::string& value) {
+void RWrapper::tickString(TickerId reqId, TickType tickType, const std::string& value) {
   acc.push_back(lst({
 		"event"_nm = "tickString",
-		"reqId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"type"_nm = tickType2Name[tickType],
 		"value"_nm = value
 	  }));
 }
 
-void RWrapper::tickEFP(TickerId tickerId, TickType tickType, double basisPoints,
+void RWrapper::tickEFP(TickerId reqId, TickType tickType, double basisPoints,
 					   const std::string& formattedBasisPoints, double totalDividends,
 					   int holdDays, const std::string& futureLastTradeDate,
 					   double dividendImpact, double dividendsToLastTradeDate) {
   acc.push_back(lst({
 		"event"_nm = "tickEFP",
-		"reqId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"type"_nm = tickType2Name[tickType],
 		"basisPoints"_nm = basisPoints,
 		"formattedBasisPoints"_nm = formattedBasisPoints,
@@ -243,12 +243,22 @@ void RWrapper::connectionClosed() {
 	  }));
 }
 
+// from https://stackoverflow.com/a/57163016/453735
+bool is_float(const std::string& str) {
+  if (str.empty())
+	return false;
+  char* ptr;
+  strtof(str.c_str(), &ptr);
+  return (*ptr) == '\0';
+}
+
 void RWrapper::updateAccountValue(const std::string& key, const std::string& val,
 								  const std::string& currency, const std::string& accountName) {
+  SEXP rval = is_float(val) ? Rf_ScalarReal(std::stod(val)) : Rf_mkString(val.c_str());
   acc.push_back(lst({
 		"event"_nm = "updateAccountValue",
 		"key"_nm = key,
-		"val"_nm = val,
+		"val"_nm = rval,
 		"currency"_nm = currency,
 		"accountName"_nm = accountName
 	  }));
@@ -287,7 +297,7 @@ void RWrapper::accountDownloadEnd(const std::string& accountName) {
 
 void RWrapper::nextValidId(OrderId orderId) {
   acc.push_back(lst({
-		"event"_nm = "nextValidId"
+		"event"_nm = "nextValidId",
 		"orderId"_nm = orderId
 	  }));
 }
@@ -736,12 +746,12 @@ void RWrapper::mktDepthExchanges(const std::vector<DepthMktDataDescription> &dep
 	  }));
 }
 
-void RWrapper::tickNews(int tickerId, time_t timeStamp, const std::string& providerCode,
+void RWrapper::tickNews(int reqId, time_t timeStamp, const std::string& providerCode,
 						const std::string& articleId, const std::string& headline,
 						const std::string& extraData) {
   acc.push_back(lst({
 		"event"_nm = "tickNews",
-		"tickerId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"timeStamp"_nm = timeStamp,
 		"providerCode"_nm = providerCode,
 		"articleId"_nm = articleId,
@@ -772,11 +782,11 @@ void RWrapper::smartComponents(int reqId, const SmartComponentsMap& theMap) {
 	  }));
 }
 
-void RWrapper::tickReqParams(int tickerId, double minTick, const std::string& bboExchange
-							 , int snapshotPermissions) {
+void RWrapper::tickReqParams(int reqId, double minTick, const std::string& bboExchange,
+							 int snapshotPermissions) {
   acc.push_back(lst({
 		"event"_nm = "tickReqParams",
-		"tickerId"_nm = tickerId,
+		"reqId"_nm = reqId,
 		"minTick"_nm = minTick,
 		"bboExchange"_nm = bboExchange,
 		"snapshotPermissions"_nm = snapshotPermissions,

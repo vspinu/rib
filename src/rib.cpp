@@ -41,7 +41,8 @@ cpp11::list C_decode_bin(int serverVersion, cpp11::raws bin) {
 	beg += parsed;
 	n += parsed;
 	if (n != N) {
-	  REprintf("n(%d) != N (%d)\n", n, N);
+	  // should never happen
+	  REprintf("INTERNAL ERROR: n(%d) != N (%d)\n", n, N);
 	}
   }
 
