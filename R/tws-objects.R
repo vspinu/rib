@@ -1,6 +1,6 @@
 
-#' TWS object constructors 
-#' 
+#' TWS object constructors
+#'
 #' @name tws-objects
 #' @export
 twsContract <- function(conId = 0,
@@ -37,14 +37,14 @@ twsContract <- function(conId = 0,
          secIdType = secIdType,
          secId = secId,
          comboLegsDescrip = comboLegsDescrip,
-         comboLegs = comboLegs), 
+         comboLegs = comboLegs),
     class = c('twsContract', "strlist"))
 }
 
 #' @rdname tws-objects
 #' @export
 twsCurrency <- function(symbol, strike = 0, currency = "USD", exchange = "IDEALPRO", ...) {
-  twsContract(symbol = symbol, strike = strike, secType = "CASH", 
+  twsContract(symbol = symbol, strike = strike, secType = "CASH",
               currency = currency, exchange = exchange, ...)
 }
 
@@ -52,15 +52,15 @@ twsCurrency <- function(symbol, strike = 0, currency = "USD", exchange = "IDEALP
 #' @export
 twsSTK <- twsEquity <- function(symbol, strike = 0, currency = 'USD', exchange = "SMART",
                                 primaryExchange = "", localSymbol = "", ...) {
-  twsContract(symbol = symbol, localSymbol = localSymbol, strike = strike, secType = "STK", 
+  twsContract(symbol = symbol, localSymbol = localSymbol, strike = strike, secType = "STK",
               currency = currency, exchange = exchange, primaryExchange = primaryExchange, ...)
 }
 
 #' @rdname tws-objects
 #' @export
-twsCFD <- function(symbol, currency = "", exchange = "", localSymbol = "", 
+twsCFD <- function(symbol, currency = "", exchange = "", localSymbol = "",
                    primaryExchange = "", ...) {
-  twsContract(symbol = symbol, localSymbol = localSymbol, strike = strike, secType = "CFD", 
+  twsContract(symbol = symbol, localSymbol = localSymbol, strike = strike, secType = "CFD",
               currency = currency, exchange = exchange, primaryExchange = primaryExchange, ...)
 }
 
@@ -74,9 +74,9 @@ twsTagValue <- function(tag = "", value = "") {
 #' @export
 twsComboLeg <- function(conId = 0,
                         ratio = 0,
-                        action = c("BUY","SELL","SSHORT"), 
+                        action = c("BUY","SELL","SSHORT"),
                         exchange = "",
-                        openClose = c("same", "open", "close", "unknown"), 
+                        openClose = c("same", "open", "close", "unknown"),
                         shortSaleSlot = 0, # 1 = clearing broker, 2 = third party
                         designatedLocation = "",
                         exemptCode = -1) {

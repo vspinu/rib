@@ -22,22 +22,22 @@ TWS <-
 
           private = list(
             nextValidId = as.integer(Sys.time())
-          ), 
-          
+          ),
+
           public = list2(
             clientId = 1,
             host = "localhost",
-            port = 4002, 
+            port = 4002,
             inHandlers = NULL,
             outHandlers = NULL,
-            
+
             data = strlist(),
             record = TRUE,
 
             requests = strenv(),
             reqval = function(reqId) {
               self$requests[[as.character(reqId)]]$val
-            }, 
+            },
 
             initialize = function(inHandlers, outHandlers, ...) {
               if (is.function(inHandlers))
@@ -53,13 +53,13 @@ TWS <-
               id <- private$nextValidId + 1L
               private$nextValidId <- id
               id
-            }, 
+            },
 
             open = function(clientId = self$clientId, host = self$host,
                             port = self$port, timeout = 5, read_interval = .1) {
               tws_connect(self, clientId, host = host, port = port, timeout = timeout)
               tws_process_msgs(self, read_interval = read_interval)
-            }, 
+            },
 
             close = function() {
               if (self$isOpen()) {
@@ -68,7 +68,7 @@ TWS <-
                   catlog("Disconnected client:{self$clientId} {self$host}:{self$port}")
                 }, silent = T)
               }
-            }, 
+            },
 
             isOpen = function() {
               if (is.null(self$con))
@@ -117,7 +117,7 @@ tws_handle_inmsg <- function(self) {
       msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
                             ix = ix,
                             bin = bin,
-                            event = val[["event"]], 
+                            event = val[["event"]],
                             val = val),
                        class = c("inmsg", "strlist"))
       for (hl in self$inHandlers) {
@@ -129,7 +129,7 @@ tws_handle_inmsg <- function(self) {
           cat("Inbound message (bound to `msg` in GlobalEnv):\n")
           str(msg)
           stop(err)
-        })        
+        })
         if (is.null(msg)) break
       }
       ix <- ix + 1L
@@ -157,7 +157,7 @@ tws_handle_outmsg <- function(self, event, encoder, val) {
       bin <- do.call(encoder, c(self, val))
     }
     writeBin(bin, self$con)
-  }, 
+  },
   error = function(err) {
     print(rlang::trace_back())
     stop(err)
@@ -168,7 +168,7 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
                         optionalCapabilities = "", timeout = 5,
                         blocking = .Platform$OS.type == "windows") {
 
-  if (is.null(getOption('digits.secs'))) 
+  if (is.null(getOption('digits.secs')))
     options(digits.secs = 6)
 
   if (self$isOpen())
@@ -179,7 +179,7 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
   self$con <- con
   on.exit(self$close())
 
-  if (!self$isOpen()) { 
+  if (!self$isOpen()) {
     stop(sprintf("couldn't connect to TWS on '%s:%s'", host, port))
   }
 

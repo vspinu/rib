@@ -15,7 +15,7 @@
 #'    \item{bin}{raw object containing the binary representation of the TWS message}
 #'    \item{ts}{timestamp when the message was received by TWS R client}
 #' }
-#' 
+#'
 NULL
 
 is_outmsg <- function(msg) {
