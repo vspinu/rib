@@ -8,6 +8,33 @@ using SizeType = long long;
 #else
 using SizeType = int;
 #endif
+ 
+// from https://stackoverflow.com/a/57163016/453735
+bool is_float(const std::string& str) {
+  if (str.empty())
+	return false;
+  char* ptr;
+  strtof(str.c_str(), &ptr);
+  return (*ptr) == '\0';
+}
+ 
+SEXP float_or_string(const std::string& value) {
+  return(is_float(value) ?
+		 Rf_ScalarReal(std::stod(value)) :
+		 Rf_mkString(value.c_str()));
+}
+
+cpp11::doubles POSIXct(long time) {
+  cpp11::doubles out({static_cast<double>(time)});
+  out.attr("class") = cpp11::strings({"POSIXct", "POSIXt"});
+  out.attr("tzone") = cpp11::strings({"UTC"});
+  return out;
+}
+ 
+void setPOSIXct(cpp11::writable::doubles& time) {
+  time.attr("class") = cpp11::strings({"POSIXct", "POSIXt"});
+  time.attr("tzone") = cpp11::strings({"UTC"});
+}
 
 std::unordered_map<TickType, std::string> tickType2Name({
 	{BID_SIZE, "BID_SIZE"},
@@ -243,22 +270,12 @@ void RWrapper::connectionClosed() {
 	  }));
 }
 
-// from https://stackoverflow.com/a/57163016/453735
-bool is_float(const std::string& str) {
-  if (str.empty())
-	return false;
-  char* ptr;
-  strtof(str.c_str(), &ptr);
-  return (*ptr) == '\0';
-}
-
-void RWrapper::updateAccountValue(const std::string& key, const std::string& val,
+void RWrapper::updateAccountValue(const std::string& key, const std::string& value,
 								  const std::string& currency, const std::string& accountName) {
-  SEXP rval = is_float(val) ? Rf_ScalarReal(std::stod(val)) : Rf_mkString(val.c_str());
   acc.push_back(lst({
 		"event"_nm = "updateAccountValue",
 		"key"_nm = key,
-		"val"_nm = rval,
+		"value"_nm = float_or_string(value),
 		"currency"_nm = currency,
 		"accountName"_nm = accountName
 	  }));
@@ -458,7 +475,7 @@ void RWrapper::realtimeBar(TickerId reqId, long time, double open, double high,
   acc.push_back(lst({
 		"event"_nm = "realtimeBar",
 		"reqId"_nm = reqId,
-		"time"_nm = time,
+		"time"_nm = POSIXct(time),
 		"open"_nm = open,
 		"high"_nm = high,
 		"low"_nm = low,
@@ -472,7 +489,7 @@ void RWrapper::realtimeBar(TickerId reqId, long time, double open, double high,
 void RWrapper::currentTime(long time) {
   acc.push_back(lst({
 		"event"_nm = "currentTime",
-		"time"_nm = time,
+		"time"_nm = POSIXct(time),
 	  }));
 }
 
@@ -544,14 +561,14 @@ void RWrapper::positionEnd() {
 
 void RWrapper::accountSummary(int reqId, const std::string& account,
 							  const std::string& tag, const std::string& value,
-							  const std::string& curency) {
+							  const std::string& currency) {
   acc.push_back(lst({
 		"event"_nm = "accountSummary",
 		"reqId"_nm = reqId,
 		"account"_nm = account,
 		"tag"_nm = tag,
-		"value"_nm = value,
-		"curency"_nm = curency,
+		"value"_nm = float_or_string(value),
+		"currency"_nm = currency,
 	  }));
 }
 
@@ -687,7 +704,7 @@ void RWrapper::softDollarTiers(int reqId, const std::vector<SoftDollarTier> &tie
   acc.push_back(lst({
 		"event"_nm = "softDollarTiers",
 		"reqId"_nm = reqId,
-		"tiers"_nm = df({
+		"tiers"_nm = wdf({
 			"name"_nm = name,
 			"val"_nm = val,
 			"displayName"_nm = displayName,
@@ -704,7 +721,7 @@ void RWrapper::familyCodes(const std::vector<FamilyCode> &familyCodes) {
   }
   acc.push_back(lst({
 		"event"_nm = "familyCodes",
-		"familyCodes"_nm = df({
+		"familyCodes"_nm = wdf({
 			"accountID"_nm = accountID,
 			"familyCodeStr"_nm = familyCodeStr,
 		  }),
@@ -736,7 +753,7 @@ void RWrapper::mktDepthExchanges(const std::vector<DepthMktDataDescription> &dep
   }
   acc.push_back(lst({
 		"event"_nm = "mktDepthExchanges",
-		"depthMktDataDescriptions"_nm = df({
+		"depthMktDataDescriptions"_nm = wdf({
 			"exchange"_nm = exchange,
 			"secType"_nm = secType,
 			"listingExch"_nm = listingExch,
@@ -752,7 +769,7 @@ void RWrapper::tickNews(int reqId, time_t timeStamp, const std::string& provider
   acc.push_back(lst({
 		"event"_nm = "tickNews",
 		"reqId"_nm = reqId,
-		"timeStamp"_nm = timeStamp,
+		"time"_nm = POSIXct(timeStamp),
 		"providerCode"_nm = providerCode,
 		"articleId"_nm = articleId,
 		"headline"_nm = headline,
@@ -774,7 +791,7 @@ void RWrapper::smartComponents(int reqId, const SmartComponentsMap& theMap) {
   acc.push_back(lst({
 		"event"_nm = "smartComponents",
 		"reqId"_nm = reqId,
-		"smartComponents"_nm = df({
+		"smartComponents"_nm = wdf({
 			"bitNumber"_nm = bitNumber,
 			"exchange"_nm = exchange,
 			"exchangeLetter"_nm = exchangeLetter,
@@ -802,7 +819,7 @@ void RWrapper::newsProviders(const std::vector<NewsProvider> &newsProviders) {
   }
   acc.push_back(lst({
 		"event"_nm = "newsProviders",
-		"newsProviders"_nm = df({
+		"newsProviders"_nm = wdf({
 			"providerCode"_nm = providerCode,
 			"providerName"_nm = providerName,
 		  })
@@ -857,7 +874,7 @@ void RWrapper::histogramData(int reqId, const HistogramDataVector& data) {
   acc.push_back(lst({
 		"event"_nm = "histogramData",
 		"reqId"_nm = reqId,
-		"data"_nm = df({
+		"data"_nm = wdf({
 			"price"_nm = price,
 			"size"_nm = size
 		  })
@@ -901,7 +918,7 @@ void RWrapper::marketRule(int marketRuleId,
   acc.push_back(lst({
 		"event"_nm = "marketRule",
 		"marketRuleId"_nm = marketRuleId,
-		"priceIncrements"_nm = df({
+		"priceIncrements"_nm = wdf({
 			"lowEdge"_nm = lowEdge,
 			"increment"_nm = increment
 		  }),
@@ -940,11 +957,12 @@ void RWrapper::historicalTicks(int reqId, const std::vector<HistoricalTick>& tic
 	price[i] = ticks[i].price;
 	size[i] = ticks[i].size;
   }
+  setPOSIXct(time);
   acc.push_back(lst({
 		"event"_nm = "historicalTicks",
 		"reqId"_nm = reqId,
 		"done"_nm = done,
-		"ticks"_nm = df({
+		"ticks"_nm = wdf({
 			"time"_nm = time,
 			"price"_nm = price,
 			"size"_nm = size,
@@ -969,11 +987,12 @@ void RWrapper::historicalTicksBidAsk(int reqId,
 	askPastHigh[i] = ticks[i].tickAttribBidAsk.askPastHigh;
 	bidPastLow[i] = ticks[i].tickAttribBidAsk.bidPastLow;
   }
+  setPOSIXct(time);
   acc.push_back(lst({
 		"event"_nm = "historicalTicksBidAsk",
 		"reqId"_nm = reqId,
 		"done"_nm = done,
-		"ticks"_nm = df({
+		"ticks"_nm = wdf({
 			"time"_nm = time,
 			"priceAsk"_nm = priceAsk,
 			"priceBid"_nm = priceBid,
@@ -998,11 +1017,12 @@ void RWrapper::historicalTicksLast(int reqId,
 	exchange[i] = ticks[i].exchange;
 	specialConditions[i] = ticks[i].specialConditions;
   }
+  setPOSIXct(time);
   acc.push_back(lst({
 		"event"_nm = "historicalTicksLast",
 		"reqId"_nm = reqId,
 		"done"_nm = done,
-		"ticks"_nm = df({
+		"ticks"_nm = wdf({
 			"time"_nm = time,
 			"price"_nm = price,
 			"size"_nm = size,
@@ -1020,8 +1040,8 @@ void RWrapper::tickByTickAllLast(int reqId, int tickType, time_t time,
   acc.push_back(lst({
 		"event"_nm = "tickByTickAllLast",
 		"reqId"_nm = reqId,
-		"tickType"_nm = tickType,
-		"time"_nm = time,
+		"type"_nm = tickType,
+		"time"_nm = POSIXct(time),
 		"price"_nm = price,
 		"size"_nm = size,
 		"exchange"_nm = exchange,
@@ -1038,7 +1058,7 @@ void RWrapper::tickByTickBidAsk(int reqId, time_t time,
   acc.push_back(lst({
 		"event"_nm = "tickByTickBidAsk",
 		"reqId"_nm = reqId,
-		"time"_nm = time,
+		"time"_nm = POSIXct(time),
 		"bidPrice"_nm = bidPrice,
 		"askPrice"_nm = askPrice,
 		"bidSize"_nm = bidSize,
@@ -1052,7 +1072,7 @@ void RWrapper::tickByTickMidPoint(int reqId, time_t time, double midPoint) {
   acc.push_back(lst({
 		"event"_nm = "tickByTickMidPoint",
 		"reqId"_nm = reqId,
-		"time"_nm = time,
+		"time"_nm = POSIXct(time),
 		"midPoint"_nm = midPoint,
 	  }));
 }

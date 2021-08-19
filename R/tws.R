@@ -109,31 +109,33 @@ tws_later_scheduler <- function(self, read_interval = .1) {
 }
 
 tws_handle_inmsg <- function(self) {
-  withCallingHandlers({
-    bin <- read_bin(self$con)
-    if (!is.null(bin)) {
-      vals <- C_decode_bin(self$serverVersion, bin)
-      ix <- 1L
-      for (val in vals) {
-        msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
-                              ix = ix,
-                              bin = bin,
-                              event = val[["event"]], 
-                              val = val),
-                         class = c("inmsg", "strlist"))
-        for (hl in self$inHandlers) {
+  bin <- read_bin(self$con)
+  if (!is.null(bin)) {
+    vals <- C_decode_bin(self$serverVersion, bin)
+    ix <- 1L
+    for (val in vals) {
+      msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
+                            ix = ix,
+                            bin = bin,
+                            event = val[["event"]], 
+                            val = val),
+                       class = c("inmsg", "strlist"))
+      for (hl in self$inHandlers) {
+        withCallingHandlers({
           msg <- do.call(hl, list(self, msg))
-          if (is.null(msg)) break
-        }
-        ix <- ix + 1L
-        bin <- NULL ## only on first decoded value we send bin
+        }, error = function(err) {
+          print(rlang::trace_back())
+          assign("msg", msg, envir = .GlobalEnv)
+          cat("Inbound message (bound to `msg` in GlobalEnv):\n")
+          str(msg)
+          stop(err)
+        })        
+        if (is.null(msg)) break
       }
+      ix <- ix + 1L
+      bin <- NULL ## only on first decoded value we send bin
     }
-  },
-  error = function(err) {
-    print(rlang::trace_back())
-    stop(err)
-  })
+  }
   !is.null(bin)
 }
 

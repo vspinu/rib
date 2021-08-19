@@ -7,21 +7,21 @@ check_named_list <- function(x) {
   if (length(x) > 0 && (is.null(names(x)) || !all(nzchar(names(x)))))
     stop(sprintf("Argument '%s' must be a named vector", deparse(substitute(x))), call. = FALSE)
   as.list(x)
-} 
+}
 
 ##' enc_reqMktData()
 # https://interactivebrokers.github.io/tws-api/md_request.html
 # https://interactivebrokers.github.io/tws-api/classIBApi_1_1EClient.html#a7a19258a3a2087c07c1c57b93f659b63
-enc_reqMktData <- function(self, contract, 
+enc_reqMktData <- function(self, contract,
                            genericTicks = "100,101,104,106,165,221,225,236",
                            snapshot = FALSE,
                            regulatorySnaphsot = FALSE,
-                           mktDataOptions = list(), 
+                           mktDataOptions = list(),
                            reqId = self$nextId()) {
   C_enc_reqMktData(self$encoder,
-                   reqId = reqId, 
-                   contract = contract, 
-                   genericTicks = genericTicks,
+                   reqId = reqId,
+                   contract = contract,
+                   genericTicks = paste(genericTicks, collapse = ","),
                    snapshot = snapshot,
                    regulatorySnaphsot = regulatorySnaphsot,
                    mktDataOptions = check_named_list(mktDataOptions))
@@ -34,7 +34,7 @@ enc_cancelMktData <- function(self, reqId) {
 enc_reqMktDepth <- function(self, contract, numRows = 20, isSmartDepth = FALSE,
                             mktDepthOptions = list(), reqId = self$nextId()) {
   C_enc_reqMktDepth(self$encoder,
-                    reqId = reqId, 
+                    reqId = reqId,
                     contract = contract,
                     numRows = numRows,
                     isSmartDepth = isSmartDepth,
@@ -61,15 +61,15 @@ enc_reqHistoricalData <- function(self, contract,
     else as_datetime(endDateTime)
   endDateTime <- strftime(endDateTime, format='%Y%m%d %H:%M:%S', usetz = FALSE)
   enc_reqHistoricalData(self$encoder,
-                        reqId = reqId, 
-                        contract = contract, 
-                        endDateTime = endDateTime, 
-                        durationStr = durationStr, 
-                        barSizeSetting = barSizeSetting, 
-                        whatToShow = whatToShow, 
-                        useRTH = useRTH, 
-                        formatDate = formatDate, 
-                        keepUpToDate = keepUpToDate, 
+                        reqId = reqId,
+                        contract = contract,
+                        endDateTime = endDateTime,
+                        durationStr = durationStr,
+                        barSizeSetting = barSizeSetting,
+                        whatToShow = whatToShow,
+                        useRTH = useRTH,
+                        formatDate = formatDate,
+                        keepUpToDate = keepUpToDate,
                         chartOptions = chartOptions)
 }
 
@@ -78,12 +78,12 @@ enc_cancelHistoricalData <- function(self, reqId) {
 }
 
 enc_reqRealTimeBars <- function(self, contract, barSize = 5,
-                                whatToShow = c("TRADE", "MIDPOINT", "BID", "ASK"), 
+                                whatToShow = c("TRADES", "MIDPOINT", "BID", "ASK"),
                                 useRTH = TRUE,
-                                realTimeBarsOptions = list(), 
+                                realTimeBarsOptions = list(),
                                 reqId = self$nextId()) {
   C_enc_reqRealTimeBars(self$encoder,
-                        reqId = reqId, 
+                        reqId = reqId,
                         contract = contract,
                         barSize = barSize,
                         whatToShow = match.arg(whatToShow),
@@ -92,7 +92,7 @@ enc_reqRealTimeBars <- function(self, contract, barSize = 5,
 }
 
 enc_cancelRealTimeBars <- function(self, reqId) {
-  C_enc_cancelMktData(self$encoder, reqId)
+  C_enc_cancelRealTimeBars(self$encoder, reqId)
 }
 
 enc_reqScannerParameters <- function(self) {
@@ -119,7 +119,7 @@ enc_reqFundamentalData <- function(self, contract, reportType = TWS_REPORT_TYPES
                                    fundamentalDataOptions = list(),
                                    reqId = self$nextId()) {
   C_enc_reqFundamentalData(self$encoder,
-                           reqId = reqId, 
+                           reqId = reqId,
                            contract = contract,
                            reportType = match.arg(reportType),
                            fundamentalDataOptions = check_named_list(fundamentalDataOptions))
@@ -260,8 +260,8 @@ enc_cancelPositionsMulti <- function(self, reqId) {
 }
 
 
-enc_reqAccountSummary <- function(self, tags = "", groupName = "All", reqId = self$nextId()) {
-  C_enc_reqAccountSummary(self$encoder, reqId, groupName, tags)
+enc_reqAccountSummary <- function(self, tags = ACCOUNT_SUMMARY_TAGS, group = "All", reqId = self$nextId()) {
+  C_enc_reqAccountSummary(self$encoder, reqId, group, paste(tags, collapse = ","))
 }
 
 enc_cancelAccountSummary <- function(self, reqId) {
@@ -345,7 +345,7 @@ enc_reqNewsArticle <- function(self, providerCode, articleId, newsArticleOptions
   C_enc_reqNewsArticle(self$encoder, reqId, providerCode, articleId, check_named_list(newsArticleOptions))
 }
 
-enc_reqHistoricalNews <- function(self, conId, startDateTime, endDateTime, providerCodes = "", 
+enc_reqHistoricalNews <- function(self, conId, startDateTime, endDateTime, providerCodes = "",
                                   totalResults = 300, historicalNewsOptions = list(), reqId = self$nextId()) {
   C_enc_reqHistoricalNews(self$encoder, reqId, conId = conId, providerCodes = providerCodes,
                           startDateTime = startDateTime, endDateTime = endDateTime,
@@ -390,12 +390,27 @@ enc_cancelPnLSingle <- function(self, reqId) {
   C_enc_cancelPnLSingle(self$encoder, reqId)
 }
 
+format_tws_datetime <- function(dt) {
+  if (is.character(dt))
+    return(dt)
+  if (!inherits(dt, "POSIXt")) {
+    arg <- deparse(substitute(dt))
+    stop(sprintf("'%s' argument must be either a time formatted string (YYYYMMDD hh:mm:ss) or a POSIXt object", arg))
+  }
+  strftime(now(), "%Y%m%d %H:%M:%S")
+}
+
 enc_reqHistoricalTicks <- function(self, contract, startDateTime = "", endDateTime = "", numberOfTicks = 1000,
                                    whatToShow = c("BID_ASK", "MIDPOINT", "TRADES"), useRTH = TRUE, ignoreSize = FALSE,
                                    options = list(), reqId = self$nextId()) {
   C_enc_reqHistoricalTicks(self$encoder, reqId = reqId,
-                           contract = contract, startDateTime = startDateTime, endDateTime = endDateTime, numberOfTicks = numberOfTicks,
-                           whatToShow = match.arg(whatToShow), useRth = useRth, ignoreSize = ignoreSize,
+                           contract = contract,
+                           startDateTime = format_tws_datetime(startDateTime),
+                           endDateTime = format_tws_datetime(endDateTime),
+                           numberOfTicks = numberOfTicks,
+                           whatToShow = match.arg(whatToShow),
+                           useRTH = useRTH,
+                           ignoreSize = ignoreSize,
                            options = check_named_list(options))
 }
 

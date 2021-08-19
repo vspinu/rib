@@ -312,8 +312,8 @@ C_enc_cancelPnLSingle <- function(encoder, reqId) {
   .Call(`_rib_C_enc_cancelPnLSingle`, encoder, reqId)
 }
 
-C_enc_reqHistoricalTicks <- function(encoder, reqId, contract, startDateTime, endDateTime, numberOfTicks, whatToShow, useRth, ignoreSize, options) {
-  .Call(`_rib_C_enc_reqHistoricalTicks`, encoder, reqId, contract, startDateTime, endDateTime, numberOfTicks, whatToShow, useRth, ignoreSize, options)
+C_enc_reqHistoricalTicks <- function(encoder, reqId, contract, startDateTime, endDateTime, numberOfTicks, whatToShow, useRTH, ignoreSize, options) {
+  .Call(`_rib_C_enc_reqHistoricalTicks`, encoder, reqId, contract, startDateTime, endDateTime, numberOfTicks, whatToShow, useRTH, ignoreSize, options)
 }
 
 C_enc_reqTickByTickData <- function(encoder, reqId, contract, tickType, numberOfTicks, ignoreSize) {

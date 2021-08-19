@@ -489,10 +489,10 @@ extern "C" SEXP _rib_C_enc_reqHistoricalNews(SEXP encoder, SEXP requestId, SEXP 
   END_CPP11
 }
 // rib.cpp
-cpp11::raws C_enc_reqHeadTimestamp(PREncoder encoder, int reqId, cpp11::list contract, const std::string& whatToShow, int useRTH, int formatDate);
+cpp11::raws C_enc_reqHeadTimestamp(PREncoder encoder, int reqId, cpp11::list contract, const std::string& whatToShow, bool useRTH, int formatDate);
 extern "C" SEXP _rib_C_enc_reqHeadTimestamp(SEXP encoder, SEXP reqId, SEXP contract, SEXP whatToShow, SEXP useRTH, SEXP formatDate) {
   BEGIN_CPP11
-    return cpp11::as_sexp(C_enc_reqHeadTimestamp(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<int>>(reqId), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(whatToShow), cpp11::as_cpp<cpp11::decay_t<int>>(useRTH), cpp11::as_cpp<cpp11::decay_t<int>>(formatDate)));
+    return cpp11::as_sexp(C_enc_reqHeadTimestamp(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<int>>(reqId), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(whatToShow), cpp11::as_cpp<cpp11::decay_t<bool>>(useRTH), cpp11::as_cpp<cpp11::decay_t<int>>(formatDate)));
   END_CPP11
 }
 // rib.cpp
@@ -552,10 +552,10 @@ extern "C" SEXP _rib_C_enc_cancelPnLSingle(SEXP encoder, SEXP reqId) {
   END_CPP11
 }
 // rib.cpp
-cpp11::raws C_enc_reqHistoricalTicks(PREncoder encoder, int reqId, cpp11::list contract, const std::string& startDateTime, const std::string& endDateTime, int numberOfTicks, const std::string& whatToShow, int useRth, bool ignoreSize, cpp11::list options);
-extern "C" SEXP _rib_C_enc_reqHistoricalTicks(SEXP encoder, SEXP reqId, SEXP contract, SEXP startDateTime, SEXP endDateTime, SEXP numberOfTicks, SEXP whatToShow, SEXP useRth, SEXP ignoreSize, SEXP options) {
+cpp11::raws C_enc_reqHistoricalTicks(PREncoder encoder, int reqId, cpp11::list contract, const std::string& startDateTime, const std::string& endDateTime, int numberOfTicks, const std::string& whatToShow, bool useRTH, bool ignoreSize, cpp11::list options);
+extern "C" SEXP _rib_C_enc_reqHistoricalTicks(SEXP encoder, SEXP reqId, SEXP contract, SEXP startDateTime, SEXP endDateTime, SEXP numberOfTicks, SEXP whatToShow, SEXP useRTH, SEXP ignoreSize, SEXP options) {
   BEGIN_CPP11
-    return cpp11::as_sexp(C_enc_reqHistoricalTicks(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<int>>(reqId), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(startDateTime), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(endDateTime), cpp11::as_cpp<cpp11::decay_t<int>>(numberOfTicks), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(whatToShow), cpp11::as_cpp<cpp11::decay_t<int>>(useRth), cpp11::as_cpp<cpp11::decay_t<bool>>(ignoreSize), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(options)));
+    return cpp11::as_sexp(C_enc_reqHistoricalTicks(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<int>>(reqId), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(startDateTime), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(endDateTime), cpp11::as_cpp<cpp11::decay_t<int>>(numberOfTicks), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(whatToShow), cpp11::as_cpp<cpp11::decay_t<bool>>(useRTH), cpp11::as_cpp<cpp11::decay_t<bool>>(ignoreSize), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(options)));
   END_CPP11
 }
 // rib.cpp

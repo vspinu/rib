@@ -433,9 +433,9 @@ cpp11::raws C_enc_cancelPositions(PREncoder encoder) {
 
 
 [[cpp11::register]]
-cpp11::raws C_enc_reqAccountSummary(PREncoder encoder, int reqId, const std::string& groupName, const std::string& tags) {
+cpp11::raws C_enc_reqAccountSummary(PREncoder encoder, int reqId, const std::string& group, const std::string& tags) {
   BEG;
-  client.reqAccountSummary(reqId, groupName, tags);
+  client.reqAccountSummary(reqId, group, tags);
   END;
 }
 
@@ -600,7 +600,7 @@ cpp11::raws C_enc_reqHistoricalNews(PREncoder encoder, int requestId, int conId,
 }
 
 [[cpp11::register]]
-cpp11::raws C_enc_reqHeadTimestamp(PREncoder encoder, int reqId, cpp11::list contract, const std::string& whatToShow, int useRTH, int formatDate) {
+cpp11::raws C_enc_reqHeadTimestamp(PREncoder encoder, int reqId, cpp11::list contract, const std::string& whatToShow, bool useRTH, int formatDate) {
   BEG;
   client.reqHeadTimestamp(reqId, twsContract(contract), whatToShow, useRTH, formatDate);
   END;
@@ -663,12 +663,13 @@ cpp11::raws C_enc_cancelPnLSingle(PREncoder encoder, int reqId) {
 }
 
 [[cpp11::register]]
-cpp11::raws C_enc_reqHistoricalTicks(PREncoder encoder, int reqId, cpp11::list contract, const std::string& startDateTime,
-									 const std::string& endDateTime, int numberOfTicks, const std::string& whatToShow,
-									 int useRth, bool ignoreSize, cpp11::list options) {
+cpp11::raws C_enc_reqHistoricalTicks(PREncoder encoder, int reqId, cpp11::list contract,
+									 const std::string& startDateTime, const std::string& endDateTime,
+									 int numberOfTicks, const std::string& whatToShow,
+									 bool useRTH, bool ignoreSize, cpp11::list options) {
   BEG;
   client.reqHistoricalTicks(reqId, twsContract(contract), startDateTime, endDateTime, numberOfTicks, whatToShow,
-							useRth, ignoreSize, twsTagValueListSPtr(options));
+							useRTH, ignoreSize, twsTagValueListSPtr(options));
   END;
 }
 
@@ -721,6 +722,8 @@ cpp11::raws C_enc_cancelWshEventData(PREncoder encoder, int reqId) {
   client.cancelWshEventData(reqId);
   END;
 }
+
+ 
 
 #undef BEG
 #undef END

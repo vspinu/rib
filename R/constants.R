@@ -20,6 +20,17 @@ VALID_BAR_SIZES <- c('1 secs','5 secs','15 secs','30 secs',
                      '30 mins','1 hour','1 day','1 week','1 month',
                      '3 months','1 year')
 
+ACCOUNT_SUMMARY_TAGS <-
+  c("AccountType", "NetLiquidation", "TotalCashValue", "SettledCash",
+    "AccruedCash", "BuyingPower", "EquityWithLoanValue",
+    "PreviousEquityWithLoanValue", "GrossPositionValue", "ReqTEquity",
+    "ReqTMargin", "SMA", "InitMarginReq", "MaintMarginReq",
+    "AvailableFunds", "ExcessLiquidity", "Cushion", "FullInitMarginReq",
+    "FullMaintMarginReq", "FullAvailableFunds", "FullExcessLiquidity",
+    "LookAheadNextChange", "LookAheadInitMarginReq",
+    "LookAheadMaintMarginReq", "LookAheadAvailableFunds",
+    "LookAheadExcessLiquidity", "HighestSeverity", "DayTradesRemaining",
+    "Leverage")
 
 REQ2ID <- 
   list(REQ_MKT_DATA = "1",
