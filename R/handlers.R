@@ -90,10 +90,26 @@ hl_track_requests <- function(self, msg) {
     if (is_outmsg(msg)) {
       self$requests[[id]] <- msg
     } else {
-      if (grepl("End$", msg$event)) {
-        self$requests[[id]] <- NULL
+      if (grepl("End$", msg$event) && exists(id, self$requests, inherits = F)) {
+        rm(list = id, envir = self$requests)
       }
     }
+  }
+  msg
+}
+
+#' @rdname handlers
+#' @export
+hl_proc_callbacks <- function(self, msg) {
+  if (!is.null(clb <- self$callbacks[[msg$event]]))
+    msg <- do.call(clb, list(self, msg, msg$event))
+  if (!is.null(msg) && !is.null(id <- msg$val$reqId)) {
+    cid <- as.character(id)
+    if (!is.null(msg) && !is.null(clb <- self$callbacks[[cid]]))
+      msg <- do.call(clb, list(self, msg, cid))
+    cid <- paste0(msg$event, id)
+    if (!is.null(msg) && !is.null(clb <- self$callbacks[[cid]]))
+      msg <- do.call(clb, list(self, msg, cid))
   }
   msg
 }

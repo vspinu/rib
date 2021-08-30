@@ -16,9 +16,9 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Collate: 
+    'client.R'
     'constants.R'
     'cpp11.R'
-    'encoder.R'
     'handlers.R'
     'package.R'
     'tws-objects.R'

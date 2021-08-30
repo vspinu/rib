@@ -35,6 +35,7 @@ TWS <-
             record = TRUE,
 
             requests = strenv(),
+            callbacks = strenv(),
             reqval = function(reqId) {
               self$requests[[as.character(reqId)]]$val
             },
@@ -47,6 +48,18 @@ TWS <-
               self$inHandlers <- inHandlers
               self$outHandlers <- outHandlers
               list2env(list2(...), self)
+            },
+
+            addCallback = function(callback, event = NULL, reqId = self$nextId()) {
+              if (is.null(event) && is.null(reqId))
+                stop("At least one of `event` and `reqId` must be non-null")
+              self$callbacks[[paste0(event, reqId)]] <- callback
+              reqId
+            },
+
+            rmCallback = function(cid) {
+              rm(list = cid, envir = self$callbacks, inherits = FALSE)
+              NULL
             },
 
             nextId = function() {

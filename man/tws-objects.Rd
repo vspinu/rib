@@ -30,15 +30,16 @@ twsContract(
   secId = "",
   comboLegsDescrip = "",
   lastTradeDateOrContractMonth = "",
-  comboLegs = list()
+  comboLegs = list(),
+  ...
 )
 
-twsCurrency(symbol, strike = 0, currency = "USD", exchange = "IDEALPRO", ...)
+twsCurrency(symbol = "", strike = 0, currency = "", exchange = "IDEALPRO", ...)
 
 twsSTK(
-  symbol,
+  symbol = "",
   strike = 0,
-  currency = "USD",
+  currency = "",
   exchange = "SMART",
   primaryExchange = "",
   localSymbol = "",
@@ -46,8 +47,9 @@ twsSTK(
 )
 
 twsCFD(
-  symbol,
+  symbol = "",
   currency = "",
+  strike = 0,
   exchange = "",
   localSymbol = "",
   primaryExchange = "",
