@@ -13,7 +13,7 @@
 
 #define CONVEND									\
   }												\
-  return out;									
+  return out;
 
 #define CLOSEPAREN }
 
@@ -110,6 +110,7 @@ Order twsOrder(lst in) {
   Order out;
   CONVBEG;
   if (NMEQ("orderId")) setcpp(out.orderId, in[i]);
+  else if (NMEQ("id")) setcpp(out.orderId, in[i]);
   else if (NMEQ("clientId")) setcpp(out.clientId, in[i]);
   else if (NMEQ("permId")) setcpp(out.permId, in[i]);
   else if (NMEQ("action")) setcpp(out.action, in[i]);
@@ -249,6 +250,7 @@ Order twsOrder(lst in) {
   else if (NMEQ("algoParams")) out.algoParams = twsTagValueListSPtr(in[i]);
   else if (NMEQ("smartComboRoutingParams")) out.smartComboRoutingParams = twsTagValueListSPtr(in[i]);
   else if (NMEQ("orderMiscOptions")) out.orderMiscOptions = twsTagValueListSPtr(in[i]);
+  // TODO:
   else if (NMEQ("conditions")) cpp11::stop("'conditions' not implemented yet");
   /* vector<shared_ptr<OrderCondition>> conditions; */
   else if (NMEQ("orderComboLegs")) cpp11::stop("'orderComboLegs' not implemented yet");

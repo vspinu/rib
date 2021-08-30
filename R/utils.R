@@ -1,9 +1,11 @@
 
+#' @export
 strenv <- function(..., parent = parent.frame()) {
   structure(list2env(list2(...), parent = parent),
             class = c("strenv", "environment"))
 }
 
+#' @export
 strdfenv <- function(..., parent = parent.frame()) {
   structure(list2env(list2(...), parent = parent),
             class = c("strdfenv", "environment"))
@@ -38,6 +40,11 @@ str.strenv <- function(object, give.attr = F, give.head = F, no.list = T,
   obj <- as.list(object, all.names = T)
   str(obj, give.attr = give.attr, give.head = F,
       digits.d = digits.d, nest.lev = nest.lev,  no.list = no.list, ...)
+}
+
+#' @export
+print.strenv <- function(x, ...) {
+  str.strenv(x, ...)
 }
 
 stdfenv2dt <- function(x) {

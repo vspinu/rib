@@ -19,38 +19,42 @@ twsContract <- function(conId = 0,
                         secId = "",
                         comboLegsDescrip = "",
                         lastTradeDateOrContractMonth = "",
-                        comboLegs = list()) {
+                        comboLegs = list(),
+                        ...) {
   structure(
-    list(conId = conId,
-         symbol = symbol,
-         secType = secType,
-         lastTradeDateOrContractMonth = lastTradeDateOrContractMonth,
-         strike = strike,
-         right = right,
-         multiplier = multiplier,
-         exchange = exchange,
-         primaryExchange = primaryExchange,
-         currency = currency,
-         localSymbol = localSymbol,
-         tradingClass = tradingClass,
-         includeExpired = includeExpired,
-         secIdType = secIdType,
-         secId = secId,
-         comboLegsDescrip = comboLegsDescrip,
-         comboLegs = comboLegs),
+    dots_list(conId = conId,
+              symbol = symbol,
+              secType = secType,
+              lastTradeDateOrContractMonth = lastTradeDateOrContractMonth,
+              strike = strike,
+              right = right,
+              multiplier = multiplier,
+              exchange = exchange,
+              primaryExchange = primaryExchange,
+              currency = currency,
+              localSymbol = localSymbol,
+              tradingClass = tradingClass,
+              includeExpired = includeExpired,
+              secIdType = secIdType,
+              secId = secId,
+              comboLegsDescrip = comboLegsDescrip,
+              comboLegs = comboLegs,
+              ...,
+              .named = TRUE,
+              .ignore_empty = "all"),
     class = c('twsContract', "strlist"))
 }
 
 #' @rdname tws-objects
 #' @export
-twsCurrency <- function(symbol, strike = 0, currency = "USD", exchange = "IDEALPRO", ...) {
+twsCurrency <- function(symbol = "", strike = 0, currency = "", exchange = "IDEALPRO", ...) {
   twsContract(symbol = symbol, strike = strike, secType = "CASH",
               currency = currency, exchange = exchange, ...)
 }
 
 #' @rdname tws-objects
 #' @export
-twsSTK <- twsEquity <- function(symbol, strike = 0, currency = 'USD', exchange = "SMART",
+twsSTK <- twsEquity <- function(symbol = "", strike = 0, currency = "", exchange = "SMART",
                                 primaryExchange = "", localSymbol = "", ...) {
   twsContract(symbol = symbol, localSymbol = localSymbol, strike = strike, secType = "STK",
               currency = currency, exchange = exchange, primaryExchange = primaryExchange, ...)
@@ -58,7 +62,7 @@ twsSTK <- twsEquity <- function(symbol, strike = 0, currency = 'USD', exchange =
 
 #' @rdname tws-objects
 #' @export
-twsCFD <- function(symbol, currency = "", exchange = "", localSymbol = "",
+twsCFD <- function(symbol = "", currency = "", strike = 0, exchange = "", localSymbol = "",
                    primaryExchange = "", ...) {
   twsContract(symbol = symbol, localSymbol = localSymbol, strike = strike, secType = "CFD",
               currency = currency, exchange = exchange, primaryExchange = primaryExchange, ...)
@@ -282,7 +286,8 @@ twsOrder <- function(orderId = 0,
                      postToAts = NA_integer_) {
   cl <- match.call()
   cl[[1]] <- as.name("list")
-  out <- structure(eval(cl), class = c("twsOrder", "strlist"))
+  env <- parent.frame()
+  out <- structure(eval(cl, envir = env), class = c("twsOrder", "strlist"))
   for (nm in names(order_par_options)) {
     if (is.character(arg <- out[[nm]][[1]])) {
       if (!arg %in% order_par_options[[nm]])

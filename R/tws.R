@@ -1,4 +1,4 @@
-#' @include encoder.R utils.R
+#' @include client.R utils.R
 NULL
 
 #' @export

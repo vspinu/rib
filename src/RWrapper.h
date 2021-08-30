@@ -21,7 +21,7 @@ using wdf = cpp11::writable::data_frame;
 
 struct RWrapper : public EWrapper {
 #include "EWrapper_prototypes.h"
- 
+
   std::vector<lst> acc;
 
   lst RContract(const Contract& contract);
@@ -35,3 +35,23 @@ struct RWrapper : public EWrapper {
 
 };
 
+
+// from https://stackoverflow.com/a/57163016/453735
+inline bool is_float(const std::string& str) {
+  if (str.empty())
+	return false;
+  char* ptr;
+  strtof(str.c_str(), &ptr);
+  return (*ptr) == '\0';
+}
+
+inline SEXP float_or_string(const std::string& value) {
+  if (is_float(value)) {
+    double out = std::stod(value);
+    if (out > 1.7E308)
+      out = NA_REAL;
+    return Rf_ScalarReal(out);
+  } else {
+    return Rf_mkString(value.c_str());
+  }
+}

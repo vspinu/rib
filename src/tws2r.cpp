@@ -6,6 +6,14 @@ inline double unset2na(const double x) {
   return (x == UNSET_DOUBLE) ? NA_REAL : x;
 }
 
+inline int unset2na(const int x) {
+  return (x == UNSET_INTEGER) ? NA_INTEGER : x;
+}
+
+inline double unset2na(const long long x) {
+  return (x == UNSET_LONG) ? NA_REAL : static_cast<double>(x);
+}
+
 lst RSoftDollarTier(const SoftDollarTier& sdt) {
   return lst({
 	  "name"_nm = sdt.name(),
@@ -21,7 +29,7 @@ std::string RUsePriceMmgtAlgo(const UsePriceMmgtAlgo upma) {
    case UsePriceMmgtAlgo::DEFAULT: return "DEFAULT";
   }
 };
- 
+
 std::string ROrigin(const Origin& origin) {
   switch(origin) {
    case Origin::CUSTOMER: return "CUSTOMER";
@@ -64,7 +72,7 @@ lst RWrapper::RContract(const Contract& contract) {
 
 	  // This one is a pointer which seems to be GC collected before it's even available:
 	  // https://github.com/InteractiveBrokers/tws-api/blob/63403247a1c710fb41891581a60574ed623a17e6/source/cppclient/client/EOrderDecoder.cpp#L499
-	  /* "deltaNeutralContract"_nm = contrac.deltaNeutralContract */ 
+	  /* "deltaNeutralContract"_nm = contrac.deltaNeutralContract */
 	});
 };
 
@@ -99,7 +107,7 @@ lst RWrapper::RContractDetails(const ContractDetails& cd) {
 #if MAX_SERVER_VERSION >= 156
 	  "stockType"_nm = cd.stockType,
 #endif
-	  //Todo
+	  // TODO
 	  /* TagValueListSPtr secIdList; */
 
 	  // BOND values
@@ -124,18 +132,18 @@ lst RWrapper::RContractDetails(const ContractDetails& cd) {
 lst RWrapper::ROrderState(const OrderState& os) {
   return lst({
 	  "status"_nm = os.status,
-	  "initMarginBefore"_nm = os.initMarginBefore,
-	  "maintMarginBefore"_nm = os.maintMarginBefore,
-	  "equityWithLoanBefore"_nm = os.equityWithLoanBefore,
-	  "initMarginChange"_nm = os.initMarginChange,
-	  "maintMarginChange"_nm = os.maintMarginChange,
-	  "equityWithLoanChange"_nm = os.equityWithLoanChange,
-	  "initMarginAfter"_nm = os.initMarginAfter,
-	  "maintMarginAfter"_nm = os.maintMarginAfter,
-	  "equityWithLoanAfter"_nm = os.equityWithLoanAfter,
-	  "commission"_nm = os.commission,
-	  "minCommission"_nm = os.minCommission,
-	  "maxCommission"_nm = os.maxCommission,
+	  "initMarginBefore"_nm = float_or_string(os.initMarginBefore),
+      "maintMarginBefore"_nm = float_or_string(os.maintMarginBefore),
+      "equityWithLoanBefore"_nm = float_or_string(os.equityWithLoanBefore),
+      "initMarginChange"_nm = float_or_string(os.initMarginChange),
+      "maintMarginChange"_nm = float_or_string(os.maintMarginChange),
+      "equityWithLoanChange"_nm = float_or_string(os.equityWithLoanChange),
+      "initMarginAfter"_nm = float_or_string(os.initMarginAfter),
+      "maintMarginAfter"_nm = float_or_string(os.maintMarginAfter),
+      "equityWithLoanAfter"_nm = float_or_string(os.equityWithLoanAfter),
+	  "commission"_nm = unset2na(os.commission),
+	  "minCommission"_nm = unset2na(os.minCommission),
+	  "maxCommission"_nm = unset2na(os.maxCommission),
 	  "commissionCurrency"_nm = os.commissionCurrency,
 	  "warningText"_nm = os.warningText,
 	  "completedTime"_nm = os.completedTime,
@@ -244,17 +252,17 @@ lst RWrapper::ROrder(const Order& order) {
 	  "scaleInitFillQty"_nm = unset2na(order.scaleInitFillQty),
 	  "scaleRandomPercent"_nm = order.scaleRandomPercent,
 	  "scaleTable"_nm = order.scaleTable,
-		
+
 	  // HEDGE ORDERS
 	  "hedgeType"_nm = order.hedgeType,
 	  "hedgeParam"_nm = order.hedgeParam,
-		
+
 	  // Clearing info
 	  "account"_nm = order.account,
 	  "settlingFirm"_nm = order.settlingFirm,
 	  "clearingAccount"_nm = order.clearingAccount,
 	  "clearingIntent"_nm = order.clearingIntent,
-		
+
 	  // ALGO ORDERS ONLY
 	  "algoStrategy"_nm = order.algoStrategy,
 
@@ -262,14 +270,14 @@ lst RWrapper::ROrder(const Order& order) {
 	  /* "algoParams"_nm = order.algoParams, */
 	  /* "smartComboRoutingParams"_nm = order.smartComboRoutingParams, */
 	  "algoId"_nm = order.algoId,
-		
+
 	  // What-if
 	  "whatIf"_nm = order.whatIf,
-		
+
 	  // Not Held
 	  "notHeld"_nm = order.notHeld,
 	  "solicited"_nm = order.solicited,
-		
+
 	  // models
 	  "modelCode"_nm = order.modelCode,
 
@@ -279,18 +287,18 @@ lst RWrapper::ROrder(const Order& order) {
 	  /* TagValueListSPtr orderMiscOptions; */
 
 	  //VER PEG2BENCH fields:
-	  "referenceContractId"_nm = order.referenceContractId,
-	  "peggedChangeAmount"_nm = order.peggedChangeAmount,
+	  "referenceContractId"_nm = unset2na(order.referenceContractId),
+	  "peggedChangeAmount"_nm = unset2na(order.peggedChangeAmount),
 	  "isPeggedChangeAmountDecrease"_nm = order.isPeggedChangeAmountDecrease,
-	  "referenceChangeAmount"_nm = order.referenceChangeAmount,
+	  "referenceChangeAmount"_nm = unset2na(order.referenceChangeAmount),
 	  "referenceExchangeId"_nm = order.referenceExchangeId,
 	  "adjustedOrderType"_nm = order.adjustedOrderType,
-	  "triggerPrice"_nm = order.triggerPrice,
-	  "adjustedStopPrice"_nm = order.adjustedStopPrice,
-	  "adjustedStopLimitPrice"_nm = order.adjustedStopLimitPrice,
-	  "adjustedTrailingAmount"_nm = order.adjustedTrailingAmount,
-	  "adjustableTrailingUnit"_nm = order.adjustableTrailingUnit,
-	  "lmtPriceOffset"_nm = order.lmtPriceOffset,
+	  "triggerPrice"_nm = unset2na(order.triggerPrice),
+	  "adjustedStopPrice"_nm = unset2na(order.adjustedStopPrice),
+	  "adjustedStopLimitPrice"_nm = unset2na(order.adjustedStopLimitPrice),
+	  "adjustedTrailingAmount"_nm = unset2na(order.adjustedTrailingAmount),
+	  "adjustableTrailingUnit"_nm = unset2na(order.adjustableTrailingUnit),
+	  "lmtPriceOffset"_nm = unset2na(order.lmtPriceOffset),
 
 	  // TODO:
 	  // std::vector<std::shared_ptr<OrderCondition>> conditions;
@@ -298,7 +306,7 @@ lst RWrapper::ROrder(const Order& order) {
 	  "conditionsIgnoreRth"_nm = order.conditionsIgnoreRth,
 	  "extOperator"_nm = order.extOperator,
 	  "softDollarTier"_nm = RSoftDollarTier(order.softDollarTier),
-	  "cashQty"_nm = order.cashQty,
+	  "cashQty"_nm = unset2na(order.cashQty),
 	  "mifid2DecisionMaker"_nm = order.mifid2DecisionMaker,
 	  "mifid2DecisionAlgo"_nm = order.mifid2DecisionAlgo,
 	  "mifid2ExecutionTrader"_nm = order.mifid2ExecutionTrader,
@@ -307,19 +315,19 @@ lst RWrapper::ROrder(const Order& order) {
 	  "isOmsContainer"_nm = order.isOmsContainer,
 	  "discretionaryUpToLimitPrice"_nm = order.discretionaryUpToLimitPrice,
 	  "autoCancelDate"_nm = order.autoCancelDate,
-	  "filledQuantity"_nm = order.filledQuantity,
-	  "refFuturesConId"_nm = order.refFuturesConId,
+	  "filledQuantity"_nm = unset2na(order.filledQuantity),
+	  "refFuturesConId"_nm = unset2na(order.refFuturesConId),
 	  "autoCancelParent"_nm = order.autoCancelParent,
 	  "shareholder"_nm = order.shareholder,
 	  "imbalanceOnly"_nm = order.imbalanceOnly,
 	  "routeMarketableToBbo"_nm = order.routeMarketableToBbo,
-	  "parentPermId"_nm = order.parentPermId,
+	  "parentPermId"_nm = unset2na(order.parentPermId),
 	  "usePriceMgmtAlgo"_nm = RUsePriceMmgtAlgo(order.usePriceMgmtAlgo),
 #if MAX_SERVER_VERSION >= 157
-	  "duration"_nm = order.duration,
+	  "duration"_nm = unset2na(order.duration),
 #endif
 #if MAX_SERVER_VERSION >= 160
-	  "postToAts"_nm = order.postToAts
+	  "postToAts"_nm = unset2na(order.postToAts)
 #endif
 	});
 }
@@ -347,7 +355,7 @@ lst RWrapper::RExecution(const Execution& e) {
 	});
 }
 
- 
+
 lst RWrapper::RBar(const Bar& bar) {
   return lst({
 	  "time"_nm = bar.time,
@@ -367,7 +375,7 @@ lst RWrapper::RContractDescription(const ContractDescription& cd) {
 		"derivativeSecTypes"_nm = cd.derivativeSecTypes
 	  }));
 }
- 
+
 /* std::string RWrapper::RFaDataType(faDataType fdt) { */
 /*   switch(fdt) { */
 /*    case faDataType::GROUPS: return "GROUPS"; */

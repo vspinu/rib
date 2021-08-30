@@ -8,21 +8,6 @@ using SizeType = long long;
 #else
 using SizeType = int;
 #endif
- 
-// from https://stackoverflow.com/a/57163016/453735
-bool is_float(const std::string& str) {
-  if (str.empty())
-	return false;
-  char* ptr;
-  strtof(str.c_str(), &ptr);
-  return (*ptr) == '\0';
-}
- 
-SEXP float_or_string(const std::string& value) {
-  return(is_float(value) ?
-		 Rf_ScalarReal(std::stod(value)) :
-		 Rf_mkString(value.c_str()));
-}
 
 cpp11::doubles POSIXct(long time) {
   cpp11::doubles out({static_cast<double>(time)});
@@ -30,7 +15,7 @@ cpp11::doubles POSIXct(long time) {
   out.attr("tzone") = cpp11::strings({"UTC"});
   return out;
 }
- 
+
 void setPOSIXct(cpp11::writable::doubles& time) {
   time.attr("class") = cpp11::strings({"POSIXct", "POSIXt"});
   time.attr("tzone") = cpp11::strings({"UTC"});
@@ -252,7 +237,7 @@ void RWrapper::openOrder(OrderId orderId, const Contract& contract,
   acc.push_back(lst({
 		"event"_nm = "openOrder",
 		"orderId"_nm = orderId,
-		"contract"_nm = RContract(contract), 
+		"contract"_nm = RContract(contract),
 		"order"_nm = ROrder(order),
 		"orderState"_nm = ROrderState(orderState)
 	  }));
@@ -357,7 +342,7 @@ void RWrapper::execDetailsEnd(int reqId) {
 		"reqId"_nm = reqId
 	  }));
 }
-  
+
 void RWrapper::error(int id, int errorCode, const std::string& errorString) {;
   acc.push_back(lst({
 		"event"_nm = id == -1 ? "info" : "error",
