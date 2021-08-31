@@ -50,10 +50,40 @@ TWS <-
               list2env(list2(...), self)
             },
 
+            async = function(expr, ..., reqId = self$nextId(), auto_remove = NULL) {
+              callbacks <- dots_list(..., .named = TRUE, .ignore_empty = "all")
+              for (nm in names(callbacks)) {
+                if (!nm %in% names(EVENT2ID))
+                  stop(sprintf("Invalid TWS event `%s` for callback", nm))
+                cl <- callbacks[[nm]]
+                .f <- rlang::as_function(cl)
+                if (is.language(cl))
+                  formals(.f) <- rlang::pairlist2(self = , msg = , cid = )
+                if ((is.logical(auto_remove) && auto_remove) ||
+                    (is.null(auto_remove) && grepl("End$", nm))) {
+                  body <- body(.f)
+                  do_end <- is.symbol(body) ||
+                    !identical(body[[1]], as.symbol("{")) ||
+                    !identical(body[[length(body)]], as.symbol("msg"))
+                  body(.f) <- rlang::expr({
+                    self$rmCallback(cid)
+                    !!body(.f)
+                    !!!(if (do_end) list(NULL))
+                  })
+                }
+                self$addCallback(.f, nm, reqId = reqId)
+              }
+              rlang::eval_tidy(rlang::enquo(expr), data = list(reqId = reqId))
+            },
+
             addCallback = function(callback, event = NULL, reqId = self$nextId()) {
               if (is.null(event) && is.null(reqId))
                 stop("At least one of `event` and `reqId` must be non-null")
-              self$callbacks[[paste0(event, reqId)]] <- callback
+              stopifnot(identical(names(formals(callback)), c("self", "msg", "cid")))
+              cid <- if (is.null(event)) as.character(reqId)
+                     else if (is.null(reqId)) event
+                     else paste(event, reqId, sep = ":")
+              self$callbacks[[cid]] <- callback
               reqId
             },
 

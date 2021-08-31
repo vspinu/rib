@@ -7,7 +7,7 @@
 \alias{hl_record_stdout_val}
 \alias{hl_decode_str}
 \alias{hl_track_requests}
-\alias{hl_proc_callbacks}
+\alias{hl_process_callbacks}
 \title{IB Handlers}
 \usage{
 hl_recorder(file = stdout(), type = c("str", "val"), ts_format = TS_FORMAT)
@@ -20,7 +20,7 @@ hl_decode_str(self, msg)
 
 hl_track_requests(self, msg)
 
-hl_proc_callbacks(self, msg)
+hl_process_callbacks(self, msg)
 }
 \arguments{
 \item{file}{file to store the output, by default \code{\link[=stdout]{stdout()}}}
