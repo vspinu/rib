@@ -30,7 +30,7 @@ is_inmsg <- function(msg) {
 #' @param ts_format format for timestamps
 #' @rdname handlers
 #' @export
-hl_recorder <- function(file = stdout(), type = c("str", "val"), ts_format = TS_FORMAT) {
+hl_recorder <- function(file = stdout(), type = c("val", "str"), ts_format = TS_FORMAT) {
   type <- match.arg(type)
   function(self, msg) {
     if (self$record) {
@@ -83,12 +83,14 @@ hl_decode_str <- function(self, msg) {
 #' @rdname handlers
 #' @export
 hl_track_requests <- function(self, msg) {
-  if (!is.null(msg$val$reqId)) {
+  id <- msg$val$reqId %||% msg$val$orderId
+  if (!is.null(id)) {
     if (is.null(self$requests))
       self$requests <- strenv(parent = self)
-    id <- as.character(msg$val$reqId)
+    id <- as.character(id)
     if (is_outmsg(msg)) {
-      self$requests[[id]] <- msg
+      if (!grepl("^cancel", msg$event))
+        self$requests[[id]] <- msg
     } else {
       if (grepl("End$", msg$event) && exists(id, self$requests, inherits = F)) {
         rm(list = id, envir = self$requests)
@@ -108,8 +110,9 @@ hl_process_callbacks <- function(self, msg) {
     if (!is.null(msg) && !is.null(clb <- self$callbacks[[cid]]))
       msg <- do.call(clb, list(self, msg, cid))
     cid <- paste(msg$event, id, sep = ":")
-    if (!is.null(msg) && !is.null(clb <- self$callbacks[[cid]]))
+    if (!is.null(msg) && !is.null(clb <- self$callbacks[[cid]])) {
       msg <- do.call(clb, list(self, msg, cid))
+    }
   }
   msg
 }

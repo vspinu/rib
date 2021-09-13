@@ -155,12 +155,14 @@ enc_reqCurrentTime <- function(self) {
   C_enc_reqCurrentTime(self$encoder)
 }
 
-enc_placeOrder <- function(self, contract, order, id = self$nextId()) {
-  C_enc_placeOrder(self$encoder, id = id, contract = contract, order = order);
+enc_placeOrder <- function(self, contract, order, orderId = order$orderId) {
+  if (is.null(orderId) || orderId == 0)
+    orderId <- self$nextId()
+  C_enc_placeOrder(self$encoder, orderId = orderId, contract = contract, order = order);
 }
 
-enc_cancelOrder <- function(self, id) {
-  C_enc_cancelOrder(self$encoder, id);
+enc_cancelOrder <- function(self, orderId) {
+  C_enc_cancelOrder(self$encoder, orderId);
 }
 
 enc_reqAccountUpdates <- function(self, accountCode = "1") {
@@ -447,19 +449,21 @@ enc_cancelWshEventData <- function(self, reqId) {
 
 ENC_NAMES <- ls(pattern = "^enc_")
 REQ_FUNCTIONS <-
-  structure(map(ENC_NAMES,
-                function(nm) {
-                  fmls <- formals(getFunction(nm))[-1]
-                  args <- structure(map(names(fmls), as.name), names = names(fmls))
-                  lst <- call2("list", !!!args)
-                  out_val <- if ('reqId' %in% names(fmls)) as.name("reqId")
-                  event <- sub("enc_", "", nm)
-                  encoder <- parse_expr(sprintf("rib:::%s", nm))
-                  fn <- new_function(fmls, body = expr({
-                    msg <- !!lst
-                    tws_handle_outmsg(self, !!event, !!encoder, msg)
-                    invisible(!!out_val)
-                  }))
-                  fn
-                }),
+  structure(lapply(ENC_NAMES,
+                   function(nm) {
+                     fmls <- formals(getFunction(nm))[-1]
+                     args <- structure(lapply(names(fmls), as.name), names = names(fmls))
+                     lst <- call2("list", !!!args)
+                     out_val <-
+                       if ('reqId' %in% names(fmls)) as.name("reqId")
+                       else if ('orderId' %in% names(fmls)) as.name("orderId")
+                     event <- sub("enc_", "", nm)
+                     encoder <- parse_expr(sprintf("rib:::%s", nm))
+                     fn <- new_function(fmls, body = expr({
+                       msg <- !!lst
+                       tws_handle_outmsg(self, !!event, !!encoder, msg)
+                       invisible(!!out_val)
+                     }))
+                     fn
+                   }),
             names = sub("enc_", "", ENC_NAMES))

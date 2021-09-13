@@ -104,12 +104,12 @@ C_enc_reqCurrentTime <- function(encoder) {
   .Call(`_rib_C_enc_reqCurrentTime`, encoder)
 }
 
-C_enc_placeOrder <- function(encoder, id, contract, order) {
-  .Call(`_rib_C_enc_placeOrder`, encoder, id, contract, order)
+C_enc_placeOrder <- function(encoder, orderId, contract, order) {
+  .Call(`_rib_C_enc_placeOrder`, encoder, orderId, contract, order)
 }
 
-C_enc_cancelOrder <- function(encoder, id) {
-  .Call(`_rib_C_enc_cancelOrder`, encoder, id)
+C_enc_cancelOrder <- function(encoder, orderId) {
+  .Call(`_rib_C_enc_cancelOrder`, encoder, orderId)
 }
 
 C_enc_reqAccountUpdates <- function(encoder, accountCode) {
@@ -184,8 +184,8 @@ C_enc_cancelPositions <- function(encoder) {
   .Call(`_rib_C_enc_cancelPositions`, encoder)
 }
 
-C_enc_reqAccountSummary <- function(encoder, reqId, groupName, tags) {
-  .Call(`_rib_C_enc_reqAccountSummary`, encoder, reqId, groupName, tags)
+C_enc_reqAccountSummary <- function(encoder, reqId, group, tags) {
+  .Call(`_rib_C_enc_reqAccountSummary`, encoder, reqId, group, tags)
 }
 
 C_enc_cancelAccountSummary <- function(encoder, reqId) {

@@ -188,17 +188,17 @@ extern "C" SEXP _rib_C_enc_reqCurrentTime(SEXP encoder) {
   END_CPP11
 }
 // rib.cpp
-cpp11::raws C_enc_placeOrder(PREncoder encoder, OrderId id, cpp11::list contract, cpp11::list order);
-extern "C" SEXP _rib_C_enc_placeOrder(SEXP encoder, SEXP id, SEXP contract, SEXP order) {
+cpp11::raws C_enc_placeOrder(PREncoder encoder, OrderId orderId, cpp11::list contract, cpp11::list order);
+extern "C" SEXP _rib_C_enc_placeOrder(SEXP encoder, SEXP orderId, SEXP contract, SEXP order) {
   BEGIN_CPP11
-    return cpp11::as_sexp(C_enc_placeOrder(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<OrderId>>(id), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(order)));
+    return cpp11::as_sexp(C_enc_placeOrder(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<OrderId>>(orderId), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(order)));
   END_CPP11
 }
 // rib.cpp
-cpp11::raws C_enc_cancelOrder(PREncoder encoder, OrderId id);
-extern "C" SEXP _rib_C_enc_cancelOrder(SEXP encoder, SEXP id) {
+cpp11::raws C_enc_cancelOrder(PREncoder encoder, OrderId orderId);
+extern "C" SEXP _rib_C_enc_cancelOrder(SEXP encoder, SEXP orderId) {
   BEGIN_CPP11
-    return cpp11::as_sexp(C_enc_cancelOrder(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<OrderId>>(id)));
+    return cpp11::as_sexp(C_enc_cancelOrder(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<OrderId>>(orderId)));
   END_CPP11
 }
 // rib.cpp
@@ -328,10 +328,10 @@ extern "C" SEXP _rib_C_enc_cancelPositions(SEXP encoder) {
   END_CPP11
 }
 // rib.cpp
-cpp11::raws C_enc_reqAccountSummary(PREncoder encoder, int reqId, const std::string& groupName, const std::string& tags);
-extern "C" SEXP _rib_C_enc_reqAccountSummary(SEXP encoder, SEXP reqId, SEXP groupName, SEXP tags) {
+cpp11::raws C_enc_reqAccountSummary(PREncoder encoder, int reqId, const std::string& group, const std::string& tags);
+extern "C" SEXP _rib_C_enc_reqAccountSummary(SEXP encoder, SEXP reqId, SEXP group, SEXP tags) {
   BEGIN_CPP11
-    return cpp11::as_sexp(C_enc_reqAccountSummary(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<int>>(reqId), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(groupName), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(tags)));
+    return cpp11::as_sexp(C_enc_reqAccountSummary(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<int>>(reqId), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(group), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(tags)));
   END_CPP11
 }
 // rib.cpp

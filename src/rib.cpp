@@ -17,11 +17,11 @@
 #include "cpp11.hpp"
 using namespace cpp11::literals;
 
- 
+
 [[cpp11::register]]
 cpp11::integers C_max_client_version() {
   return cpp11::integers({MAX_CLIENT_VER});
-} 
+}
 
 
 /// DECODER
@@ -29,7 +29,7 @@ cpp11::integers C_max_client_version() {
 [[cpp11::register]]
 cpp11::list C_decode_bin(int serverVersion, cpp11::raws bin) {
   int N = bin.size(), n = 0;
- 
+
   const char* beg = reinterpret_cast<char*>(RAW(bin));
   const char* end = beg + N;
 
@@ -50,11 +50,11 @@ cpp11::list C_decode_bin(int serverVersion, cpp11::raws bin) {
   out.attr("multi-message") = true;
   out.attr("class") = "strlist";
   return out;
-} 
+}
 
 
 /// ENCODER
- 
+
 [[cpp11::register]]
 PREncoder C_encoder(int serverVersion = 0) {
   PREncoder encoder = new REncoder;
@@ -117,7 +117,7 @@ cpp11::raws C_enc_reqMktData(PREncoder encoder,
 					regulatorySnaphsot,
 					twsTagValueListSPtr(mktDataOptions));
   END;
-} 
+}
 
 
 [[cpp11::register]]
@@ -281,16 +281,16 @@ cpp11::raws C_enc_reqCurrentTime(PREncoder encoder) {
 }
 
 [[cpp11::register]]
-cpp11::raws C_enc_placeOrder(PREncoder encoder, OrderId id, cpp11::list contract, cpp11::list order) {
+cpp11::raws C_enc_placeOrder(PREncoder encoder, OrderId orderId, cpp11::list contract, cpp11::list order) {
   BEG;
-  client.placeOrder(id, twsContract(contract), twsOrder(order));
+  client.placeOrder(orderId, twsContract(contract), twsOrder(order));
   END;
 }
 
 [[cpp11::register]]
-cpp11::raws C_enc_cancelOrder(PREncoder encoder, OrderId id) {
+cpp11::raws C_enc_cancelOrder(PREncoder encoder, OrderId orderId) {
   BEG;
-  client.cancelOrder(id);
+  client.cancelOrder(orderId);
   END;
 }
 
@@ -723,7 +723,7 @@ cpp11::raws C_enc_cancelWshEventData(PREncoder encoder, int reqId) {
   END;
 }
 
- 
+
 
 #undef BEG
 #undef END

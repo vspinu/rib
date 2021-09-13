@@ -63,7 +63,7 @@ SoftDollarTier twsSoftDollarTier(lst in) {
   if (NMEQ("name")) setcpp(name, in[i]);
   else if (NMEQ("val")) setcpp(val, in[i]);
   else if (NMEQ("displayName")) setcpp(displayName, in[i]);
-  else cpp11::stop("Invalid 'twsSoftDollarTier' parameter '%s'", nm);
+  else cpp11::stop("Invalid 'twsSoftDollarTier' field '%s'", nm);
   CLOSEPAREN;
   return (SoftDollarTier(name, val, displayName));
 }
@@ -78,7 +78,7 @@ ExecutionFilter twsExecutionFilter(lst in) {
   else if (NMEQ("secType")) setcpp(out.m_secType, in[i]);
   else if (NMEQ("exchange")) setcpp(out.m_exchange, in[i]);
   else if (NMEQ("side")) setcpp(out.m_side, in[i]);
-  else cpp11::stop("Invalid 'twsExecutionFilter' parameter '%s'", nm);
+  else cpp11::stop("Invalid 'twsExecutionFilter' field '%s'", nm);
   CONVEND;
 }
 
@@ -102,7 +102,7 @@ Contract twsContract(lst in) {
   else if (NMEQ("secId")) setcpp(out.secId, in[i]);
   else if (NMEQ("comboLegsDescrip")) setcpp(out.comboLegsDescrip, in[i]);
   else if (NMEQ("comboLegs")) out.comboLegs = twsComboLegsSPtr(in[i]);
-  else cpp11::stop("Invalid 'twsContract' parameter '%s'", nm);
+  else cpp11::stop("Invalid 'twsContract' field '%s'", nm);
   CONVEND;
 }
 
@@ -255,7 +255,7 @@ Order twsOrder(lst in) {
   /* vector<shared_ptr<OrderCondition>> conditions; */
   else if (NMEQ("orderComboLegs")) cpp11::stop("'orderComboLegs' not implemented yet");
   /* OrderComboLegListSPtr orderComboLegs; */
-  else cpp11::stop("Invalid 'twsOrder' parameter '%s'", nm);
+  else cpp11::stop("Invalid 'twsOrder' field '%s'", nm);
   CONVEND;
 }
 
@@ -283,6 +283,6 @@ ScannerSubscription twsScannerSubscription(lst in) {
   else if (NMEQ("averageOptionVolumeAbove")) setcpp(out.averageOptionVolumeAbove, in[i]);
   else if (NMEQ("scannerSettingPairs")) setcpp(out.scannerSettingPairs, in[i]);
   else if (NMEQ("stockTypeFilter")) setcpp(out.stockTypeFilter, in[i]);
-  else cpp11::stop("Invalid 'twsScannerSubscription' parameter '%s'", nm);
+  else cpp11::stop("Invalid 'twsScannerSubscription' field '%s'", nm);
   CONVEND;
 }

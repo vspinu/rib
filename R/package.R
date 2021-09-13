@@ -5,7 +5,6 @@
 ##' @docType package
 ##'
 ##' @name rib-package
-##' @importFrom purrr map map_chr imap
 ##' @import rlang
 ##' @importFrom R6 R6Class
 ##' @importFrom glue glue

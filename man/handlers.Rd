@@ -10,7 +10,7 @@
 \alias{hl_process_callbacks}
 \title{IB Handlers}
 \usage{
-hl_recorder(file = stdout(), type = c("str", "val"), ts_format = TS_FORMAT)
+hl_recorder(file = stdout(), type = c("val", "str"), ts_format = TS_FORMAT)
 
 hl_record_stdout_str(self, msg)
 
