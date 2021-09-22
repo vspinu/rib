@@ -103,8 +103,10 @@ hl_track_requests <- function(self, msg) {
 #' @rdname handlers
 #' @export
 hl_process_callbacks <- function(self, msg) {
-  if (!is.null(clb <- self$callbacks[[msg$event]]))
-    msg <- do.call(clb, list(self, msg, msg$event))
+  if (!is.null(clb <- self$callbacks[[msg$event]])) {
+    for (i in seq_along(clb))
+    msg <- do.call(clb[[i]], list(self, msg, list(msg$event, i)))
+  }
   if (!is.null(msg) && !is.null(id <- msg$val$reqId)) {
     cid <- as.character(id)
     if (!is.null(msg) && !is.null(clb <- self$callbacks[[cid]]))
