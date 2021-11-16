@@ -48,7 +48,7 @@ hl_recorder <- function(file = stdout(), type = c("val", "str"), ts_format = TS_
         }
       ts <- format.POSIXct(msg$ts, ts_format, usetz = FALSE)
       inout <- if (is_outmsg(msg)) "<-" else "->"
-      cat(ts, inout, event, msg$id, str, "\n", file = file, append = TRUE)
+      cat(ts, inout, event, str, "+ > \n", file = file, append = TRUE)
     }
     msg
   }
@@ -105,7 +105,7 @@ hl_track_requests <- function(self, msg) {
 hl_process_callbacks <- function(self, msg) {
   if (!is.null(clb <- self$callbacks[[msg$event]])) {
     for (i in seq_along(clb))
-    msg <- do.call(clb[[i]], list(self, msg, list(msg$event, i)))
+      msg <- do.call(clb[[i]], list(self, msg, list(msg$event, i)))
   }
   if (!is.null(msg) && !is.null(id <- msg$val$reqId)) {
     cid <- as.character(id)

@@ -156,3 +156,12 @@ EVENT2ID <- list(tickPrice = "1", tickSize = "2", orderStatus = "3",
 
 ID2EVENT <- structure(as.list(names(EVENT2ID)),
                       names = as.character(EVENT2ID))
+
+COUNTERS <- list2env(list(error = 1,
+                          id = 1))
+
+next_id <- function() {
+  id <- COUNTERS[["id"]]
+  COUNTERS[["id"]] <- id + 1
+  as.character(id)
+}

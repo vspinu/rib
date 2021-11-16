@@ -10,15 +10,15 @@ using SizeType = int;
 #endif
 
 cpp11::doubles POSIXct(long time) {
-  cpp11::doubles out({static_cast<double>(time)});
-  out.attr("class") = cpp11::strings({"POSIXct", "POSIXt"});
-  out.attr("tzone") = cpp11::strings({"UTC"});
+  cpp11::writable::doubles out({static_cast<double>(time)});
+  out.attr("class") = {"POSIXct", "POSIXt"};
+  out.attr("tzone") = {"UTC"};
   return out;
 }
 
 void setPOSIXct(cpp11::writable::doubles& time) {
-  time.attr("class") = cpp11::strings({"POSIXct", "POSIXt"});
-  time.attr("tzone") = cpp11::strings({"UTC"});
+  time.attr("class") = {"POSIXct", "POSIXt"};
+  time.attr("tzone") = {"UTC"};
 }
 
 std::unordered_map<TickType, std::string> tickType2Name({

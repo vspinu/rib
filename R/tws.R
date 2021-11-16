@@ -27,9 +27,9 @@ TWS <-
           ),
 
           public = list2(
-            id = function() {
-              address(self)
-            },
+            ## id = function() {
+            ##   address(self)
+            ## },
 
             clientId = 1,
             host = "localhost",
@@ -48,7 +48,6 @@ TWS <-
 
             initialize = function(inHandlers, outHandlers, ...) {
               private$nextValidId <- as.integer(Sys.time())
-              private$loop <- later::create_loop()
               private$laterCancelers <- strenv()
               if (is.function(inHandlers))
                 inHandlers <- list(inHandlers)
@@ -64,40 +63,91 @@ TWS <-
               }
             },
 
-            later = function(expr, delay = 0, id = NULL) {
-              expr <- rlang::enexpr(expr)
-              fn <-
-                if (!is.null(id)) {
-                  id <- as.character(id)
-                  cl <- private$laterCancelers[[id]]
-                  if (!is.null(cl)) {
-                    cl()
-                  }
-                  new_function(list(), expr({
-                    rm(list = id, envir = private$laterCancelers)
-                    !!expr
-                  }))
-                } else {
-                  new_function(list(), expr(!!expr))
+            doLater = function(fn, delay = 0, id = NULL) {
+              stopifnot(delay > 0)
+              fn <- rlang::as_function(fn)
+              formals(fn) <- alist(self = )
+
+              remove_canceler <- !is.null(id)
+              if (!is.null(id)) {
+                id <- as.character(id)
+                cl <- private$laterCancelers[[id]]
+                if (!is.null(cl)) {
+                  cl()
                 }
-              cl <- later::later(fn, delay = delay, loop = private$loop)
+              }
+
+              .fn <-
+                function() {
+                  if (remove_canceler)
+                    rm(list = id, envir = private$laterCancelers)
+                  withCallingHandlers({
+                    fn(self)
+                  },
+                  error = function(err) {
+                    print(rlang::trace_back())
+                    dmp_name <- paste0("dmp", self$clientId, "_", COUNTERS[["error"]])
+                    COUNTERS[["error"]] <- COUNTERS[["error"]] + 1
+                    dump.frames(dmp_name)
+                    cat(sprintf("Error frames dumped to `%s` in GlobalEnv\n", dmp_name))
+                    cat("ERROR:", err$message, "\n")
+                  })
+                }
+              cl <- later::later(.fn, delay = delay, loop = private$loop)
               if (!is.null(id))
                 private$laterCancelers[[id]] <- cl
               invisible(cl)
             },
 
-            async = function(expr, ..., auto_remove = NULL) {
-              async_impl(self, rlang::enquo(expr), ..., reqId = NULL, auto_remove = auto_remove)
+            doRepeat = function(fn, interval = 0, id = NULL) {
+              stopifnot(interval > 0)
+              fn <- rlang::as_function(fn)
+              formals(fn) <- alist(self = )
+              if (!is.null(id)) {
+                cl <- private$laterCancelers[[id]]
+                if (!is.null(cl))
+                  cl()
+              }
+
+              cl <- NULL
+              .fn <-
+                function() {
+                  if (!is.null(cl)) {
+                    cl()
+                    withCallingHandlers({
+                      fn(self)
+                    },
+                    error = function(err) {
+                      print(rlang::trace_back())
+                      dmp_name <- paste0("dmp", self$clientId, "_", COUNTERS[["error"]])
+                      COUNTERS[["error"]] <- COUNTERS[["error"]] + 1
+                      dump.frames(dmp_name)
+                      cat(sprintf("Error frames dumped to `%s` in GlobalEnv\n", dmp_name))
+                      cat("ERROR:", err$message, "\n")
+                    })
+                  }
+                  cl <<- later::later(.fn, delay = interval, loop = private$loop)
+                  if (!is.null(id))
+                    private$laterCancelers[[id]] <- cl
+                  cl
+                }
+              invisible(.fn())
             },
 
-            asyncid = function(expr, ..., reqId = self$nextId(), auto_remove = NULL) {
-              async_impl(self, rlang::enquo(expr), ..., reqId = reqId, auto_remove = auto_remove)
+            async = function(fn, ..., auto_remove = NULL) {
+              async_impl(self, fn, ..., reqId = NULL, auto_remove = auto_remove)
+            },
+
+            asyncid = function(fn, ..., reqId = self$nextId(), auto_remove = NULL) {
+              async_impl(self, fn, ..., reqId = reqId, auto_remove = auto_remove)
             },
 
             addCallback = function(callback, event = NULL, reqId = self$nextId()) {
               if (is.null(event) && is.null(reqId))
                 stop("At least one of `event` and `reqId` must be non-null")
-              stopifnot(identical(names(formals(callback)), c("self", "msg", "cid")))
+              if (!identical(names(formals(callback)), c("self", "msg", "cid"))) {
+                stop("`callback`'s arguments must be `self`, `msg` and `cid`")
+              }
               cid <- if (is.null(event)) as.character(reqId)
                      else if (is.null(reqId)) list(event, length(self$callbacks[[event]]) + 1)
                      else paste(event, reqId, sep = ":")
@@ -112,7 +162,7 @@ TWS <-
               if (is.character(cid))
                 rm(list = cid, envir = self$callbacks, inherits = FALSE)
               else if (is.list(cid)) {
-                self$callbacks[cid[[1]]][[cid[[2]]]] <- NULL
+                self$callbacks[[cid[[1]]]][[cid[[2]]]] <- NULL
               } else {
                 stop(sprintf("`cid` must be either a string or a list with two elements. Supplied %s", deparse(cid)), call. = F)
               }
@@ -127,17 +177,18 @@ TWS <-
 
             open = function(clientId = self$clientId, host = self$host,
                             port = self$port, timeout = 5, read_interval = .1) {
+              private$loop <- later::create_loop()
               tws_connect(self, clientId, host = host, port = port, timeout = timeout)
               tws_process_msgs(self, read_interval = read_interval)
             },
 
             close = function() {
+              later::destroy_loop(private$loop)
               if (self$isOpen()) {
                 try({
                   base::close(self$con)
                   catlog("Disconnected client:{self$clientId} {self$host}:{self$port}")
                 }, silent = T)
-                later::destroy_loop(private$loop)
               }
             },
 
@@ -163,13 +214,13 @@ tws_process_msgs <- function(self, read_interval = .1) {
       tws_later_scheduler(self, read_interval)
     },
     error = function(err) {
-      close(self$con)
-      abort(glue("{err$message} (Closing connection)"), parent = err)
+      try(close(self$con))
+      abort(sprintf("%s (Closing connection)", err$message), parent = err)
     })
 }
 
 tws_later_scheduler <- function(self, read_interval = .1) {
-  cat("scheduler:", address(self), "\n")
+  ## cat("scheduler:", address(self), "\n")
   loop <- self$.__enclos_env__$private$loop
   executor <-
     function() {
@@ -182,38 +233,44 @@ tws_later_scheduler <- function(self, read_interval = .1) {
 }
 
 tws_handle_inmsg <- function(self) {
-  ## cat("handler0:", address(self), "\n")
   bin <- read_bin(self$con)
-  if (!is.null(bin)) {
+  if (is.null(bin)) {
+    FALSE
+  } else {
     vals <- C_decode_bin(self$serverVersion, bin)
     ix <- 1L
-    ## cat("handler1:", address(self), "\n")
     for (val in vals) {
-      msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
+      msg <- structure(list(id = next_id(),
+                            ts = .POSIXct(Sys.time(), tz = "UTC"),
                             ix = ix,
                             bin = bin,
                             event = val[["event"]],
                             val = val),
                        class = c("inmsg", "strlist"))
-      ## cat("handler2 inmsg:", msg$event, address(self), "\n")
-      for (hl in self$inHandlers) {
-        withCallingHandlers({
+      withCallingHandlers(
+        for (hl in self$inHandlers) {
+          stopif(is.null(msg))
           msg <- do.call(hl, list(self, msg))
-        }, error = function(err) {
+          if (is.null(msg)) break
+        },
+        error = function(err) {
           print(rlang::trace_back())
+          msg_name <- paste0("msg", self$clientId, "_", COUNTERS[["error"]])
+          dmp_name <- paste0("dmp", self$clientId, "_", COUNTERS[["error"]])
+          COUNTERS[["error"]] <- COUNTERS[["error"]] + 1
+          assign(msg_name, msg, envir = .GlobalEnv)
+          dump.frames(dmp_name)
+          cat(sprintf("Error frames dumped to `%s` in GlobalEnv\n", dmp_name))
+          cat(sprintf("Inbound message (bound to `%s` in GlobalEnv):\n", msg_name))
           cat("ERROR:", err$message, "\n")
-          assign("msg", msg, envir = .GlobalEnv)
-          cat("Inbound message (bound to `msg` in GlobalEnv):\n")
           str(msg)
-          stop(err)
+          self$close()
+          cat("Closing connection", "\n")
         })
-        if (is.null(msg)) break
-      }
       ix <- ix + 1L
-      bin <- NULL ## only on first decoded value we send bin
     }
+    TRUE
   }
-  !is.null(bin)
 }
 
 tws_handle_outmsg <- function(self, event, encoder, val) {
@@ -233,7 +290,9 @@ tws_handle_outmsg <- function(self, event, encoder, val) {
     } else {
       bin <- do.call(encoder, c(self, val))
     }
-    writeBin(bin, self$con)
+    # by now connection can be close and we get an "invalid connection" error
+    if (self$isOpen())
+      writeBin(bin, self$con)
   },
   error = function(err) {
     print(rlang::trace_back())
@@ -300,7 +359,6 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
   if (base::isOpen(con)) {
     writeBin(C_enc_startApi(encoder, clientId, optionalCapabilities), con)
   }
-  cat("connect:", address(self), "\n")
   self
 }
 
@@ -343,7 +401,7 @@ read_bin <- function(con) {
 
 
 ### Utils
-async_impl <- function(self, qexpr, ..., reqId = self$nextId(), auto_remove = NULL) {
+async_impl <- function(self, fn, ..., reqId = self$nextId(), auto_remove = NULL) {
   callbacks <- dots_list(..., .named = TRUE, .ignore_empty = "all")
   for (nm in names(callbacks)) {
     if (!nm %in% names(EVENT2ID))
@@ -358,6 +416,7 @@ async_impl <- function(self, qexpr, ..., reqId = self$nextId(), auto_remove = NU
       do_end <- is.symbol(body) ||
         !identical(body[[1]], as.symbol("{")) ||
         !identical(body[[length(body)]], as.symbol("msg"))
+
       body(.f) <- rlang::expr({
         self$rmCallback(cid)
         !!body(.f)
@@ -366,5 +425,7 @@ async_impl <- function(self, qexpr, ..., reqId = self$nextId(), auto_remove = NU
     }
     self$addCallback(.f, nm, reqId = reqId)
   }
-  rlang::eval_tidy(qexpr, data = list(reqId = reqId, self = self), env = caller_env(2))
+  fn <- rlang::as_function(fn)
+  formals(fn) <- rlang::pairlist2(self = , reqId = )
+  fn(self, reqId)
 }

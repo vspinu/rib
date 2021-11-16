@@ -43,8 +43,22 @@ str.strenv <- function(object, give.attr = F, give.head = F, no.list = T,
 }
 
 #' @export
+as.data.frame.strenv <- function(x, ...) {
+  do.call("rbind", as.list(x))
+}
+
+#' @export
+as.data.table.strenv <- function(x, ...) {
+  data.table::rbindlist(as.list(x), fill = TRUE)
+}
+
+#' @export
 print.strenv <- function(x, ...) {
-  str.strenv(x, ...)
+  if (requireNamespace("data.table")) {
+    print(data.table::rbindlist(as.list(x), fill = TRUE), ...)
+  } else {
+    do.call("rbind", as.list(x), ...)
+  }
 }
 
 stdfenv2dt <- function(x) {
