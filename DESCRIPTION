@@ -1,7 +1,7 @@
 Package: rib
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
-Authors@R: 
+Authors@R:
     person(given = "First",
            family = "Last",
            role = c("aut", "cre"),
@@ -11,11 +11,15 @@ Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a license
 LinkingTo:
     cpp11 (>= 0.3.0)
+Imports:
+    rlang,
+    R6,
+    later,
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
-Collate: 
+RoxygenNote: 7.2.0
+Collate:
     'client.R'
     'constants.R'
     'cpp11.R'
@@ -24,3 +28,6 @@ Collate:
     'tws-objects.R'
     'utils.R'
     'tws.R'
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
