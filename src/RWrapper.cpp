@@ -244,13 +244,13 @@ void RWrapper::openOrder(OrderId orderId, const Contract& contract,
 }
 
 void RWrapper::openOrderEnd() {
-  acc.push_back(lst({
+  acc.push_back(wlst({
 		"event"_nm = "openOrderEnd",
 	  }));
 }
 
 void RWrapper::connectionClosed() {
-  acc.push_back(lst({
+  acc.push_back(wlst({
 		"event"_nm = "connectionClosed"
 	  }));
 }
@@ -539,7 +539,7 @@ void RWrapper::position(const std::string& account, const Contract& contract,
 }
 
 void RWrapper::positionEnd() {
-  acc.push_back(lst({
+  acc.push_back(wlst({
 		"event"_nm = "positionEnd",
 	  }));
 }
@@ -1082,7 +1082,7 @@ void RWrapper::completedOrder(const Contract& contract, const Order& order,
 }
 
 void RWrapper::completedOrdersEnd() {
-  acc.push_back(lst({
+  acc.push_back(wlst({
 		"event"_nm = "completedOrdersEnd",
 	  }));
 }

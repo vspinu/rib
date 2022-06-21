@@ -1,6 +1,6 @@
 
 #include "RWrapper.h"
-
+#include "cpp11/protect.hpp"
 
 inline double unset2na(const double x) {
   return (x == UNSET_DOUBLE) ? NA_REAL : x;
@@ -12,6 +12,18 @@ inline int unset2na(const int x) {
 
 inline double unset2na(const long long x) {
   return (x == UNSET_LONG) ? NA_REAL : static_cast<double>(x);
+}
+
+inline double negone2na(const double x) {
+  return (x == -1.0) ? NA_REAL : x;
+}
+
+inline int negone2na(const int x) {
+  return (x == -1) ? NA_INTEGER : x;
+}
+
+inline double negone2na(const long long x) {
+  return (x == -1) ? NA_REAL : static_cast<double>(x);
 }
 
 lst RSoftDollarTier(const SoftDollarTier& sdt) {
@@ -28,6 +40,7 @@ std::string RUsePriceMmgtAlgo(const UsePriceMmgtAlgo upma) {
    case UsePriceMmgtAlgo::USE: return "USE";
    case UsePriceMmgtAlgo::DEFAULT: return "DEFAULT";
   }
+  cpp11::stop("Invalid UsePriceMmgtAlgo enum value");
 };
 
 std::string ROrigin(const Origin& origin) {
@@ -36,6 +49,7 @@ std::string ROrigin(const Origin& origin) {
    case Origin::FIRM: return "FIRM";
    case Origin::UNKNOWN: return "UNKNON";
   }
+  cpp11::stop("Invalid Origin enum value");
 };
 
 std::string RAuctionStrategy (int as){
@@ -363,9 +377,9 @@ lst RWrapper::RBar(const Bar& bar) {
 	  "low"_nm = bar.low,
 	  "open"_nm = bar.open,
 	  "close"_nm = bar.close,
-	  "wap"_nm = bar.wap,
-	  "volume"_nm = bar.volume,
-	  "count"_nm = bar.count,
+	  "wap"_nm = negone2na(bar.wap),
+	  "volume"_nm = negone2na(bar.volume),
+	  "count"_nm = negone2na(bar.count),
 	});
 }
 

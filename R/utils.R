@@ -114,3 +114,18 @@ decode_bin_msg <- function(bin) {
   }
   strlist(bin = bin, len = len, id = id, str = str)
 }
+
+stopif <- function (...) {
+  n <- length(ll <- list(...))
+  if (n == 0L)
+    return(invisible())
+  mc <- match.call()
+  for (i in 1L:n)
+    if (!is.logical(r <- ll[[i]]) || anyNA(r) || any(r)) {
+      ch <- deparse(mc[[i + 1]], width.cutoff = 60L)
+      if (length(ch) > 1L)
+        ch <- paste(ch[1L], "....")
+      stop(sprintf("%s is TRUE", ch), call. = FALSE, domain = NA)
+    }
+  invisible()
+}

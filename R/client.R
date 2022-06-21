@@ -47,30 +47,30 @@ enc_cancelMktDepth <- function(self, reqId, isSmartDepth = FALSE) {
 
 enc_reqHistoricalData <- function(self, contract,
                                   endDateTime = NULL,
-                                  durationStr = "1 M",
-                                  barSizeSetting = BAR_SIZE_TYPES,
+                                  duration = "1 M",
+                                  barSize = BAR_SIZE_TYPES,
                                   whatToShow = WHAT_TO_SHOW_TYPES,
                                   useRTH = TRUE,
-                                  formatDate = TRUE,
                                   keepUpToDate = FALSE,
+                                  formatDate = 2,
                                   chartOptions = list(),
                                   reqId = self$nextId()) {
   whatToShow <- match.arg(whatToShow)
   endDateTime <-
-    if (is.null(endDateTime)) now() + 100
-    else as_datetime(endDateTime)
+    if (is.null(endDateTime)) Sys.time() + 100
+    else as.POSIXct(endDateTime)
   endDateTime <- strftime(endDateTime, format='%Y%m%d %H:%M:%S', usetz = FALSE)
-  enc_reqHistoricalData(self$encoder,
-                        reqId = reqId,
-                        contract = contract,
-                        endDateTime = endDateTime,
-                        durationStr = durationStr,
-                        barSizeSetting = barSizeSetting,
-                        whatToShow = whatToShow,
-                        useRTH = useRTH,
-                        formatDate = formatDate,
-                        keepUpToDate = keepUpToDate,
-                        chartOptions = chartOptions)
+  C_enc_reqHistoricalData(self$encoder,
+                          reqId = reqId,
+                          contract = contract,
+                          endDateTime = endDateTime,
+                          duration = duration,
+                          barSize = barSize,
+                          whatToShow = whatToShow,
+                          useRTH = useRTH,
+                          formatDate = formatDate,
+                          keepUpToDate = keepUpToDate,
+                          chartOptions = chartOptions)
 }
 
 enc_cancelHistoricalData <- function(self, reqId) {
@@ -399,7 +399,7 @@ format_tws_datetime <- function(dt) {
     arg <- deparse(substitute(dt))
     stop(sprintf("'%s' argument must be either a time formatted string (YYYYMMDD hh:mm:ss) or a POSIXt object", arg))
   }
-  strftime(now(), "%Y%m%d %H:%M:%S")
+  strftime(Sys.time(), "%Y%m%d %H:%M:%S")
 }
 
 enc_reqHistoricalTicks <- function(self, contract, startDateTime = "", endDateTime = "", numberOfTicks = 1000,

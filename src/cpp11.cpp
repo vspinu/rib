@@ -3,6 +3,7 @@
 
 #include "rib_types.h"
 #include "cpp11/declarations.hpp"
+#include <R_ext/Visibility.h>
 
 // rib.cpp
 cpp11::integers C_max_client_version();
@@ -83,10 +84,10 @@ extern "C" SEXP _rib_C_enc_cancelMktDepth(SEXP encoder, SEXP reqId, SEXP isSmart
   END_CPP11
 }
 // rib.cpp
-cpp11::raws C_enc_reqHistoricalData(PREncoder encoder, cpp11::list contract, const std::string& endDateTime, const std::string& durationStr, const std::string& barSizeSetting, const std::string& whatToShow, bool useRTH, bool formatDate, bool keepUpToDate, cpp11::list chartOptions, long reqId);
+cpp11::raws C_enc_reqHistoricalData(PREncoder encoder, cpp11::list contract, const std::string& endDateTime, const std::string& durationStr, const std::string& barSizeSetting, const std::string& whatToShow, bool useRTH, int formatDate, bool keepUpToDate, cpp11::list chartOptions, long reqId);
 extern "C" SEXP _rib_C_enc_reqHistoricalData(SEXP encoder, SEXP contract, SEXP endDateTime, SEXP durationStr, SEXP barSizeSetting, SEXP whatToShow, SEXP useRTH, SEXP formatDate, SEXP keepUpToDate, SEXP chartOptions, SEXP reqId) {
   BEGIN_CPP11
-    return cpp11::as_sexp(C_enc_reqHistoricalData(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(endDateTime), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(durationStr), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(barSizeSetting), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(whatToShow), cpp11::as_cpp<cpp11::decay_t<bool>>(useRTH), cpp11::as_cpp<cpp11::decay_t<bool>>(formatDate), cpp11::as_cpp<cpp11::decay_t<bool>>(keepUpToDate), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(chartOptions), cpp11::as_cpp<cpp11::decay_t<long>>(reqId)));
+    return cpp11::as_sexp(C_enc_reqHistoricalData(cpp11::as_cpp<cpp11::decay_t<PREncoder>>(encoder), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(contract), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(endDateTime), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(durationStr), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(barSizeSetting), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(whatToShow), cpp11::as_cpp<cpp11::decay_t<bool>>(useRTH), cpp11::as_cpp<cpp11::decay_t<int>>(formatDate), cpp11::as_cpp<cpp11::decay_t<bool>>(keepUpToDate), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(chartOptions), cpp11::as_cpp<cpp11::decay_t<long>>(reqId)));
   END_CPP11
 }
 // rib.cpp
@@ -700,7 +701,7 @@ static const R_CallMethodDef CallEntries[] = {
 };
 }
 
-extern "C" void R_init_rib(DllInfo* dll){
+extern "C" attribute_visible void R_init_rib(DllInfo* dll){
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
   R_forceSymbols(dll, TRUE);

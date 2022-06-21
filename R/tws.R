@@ -3,14 +3,14 @@ NULL
 
 #' @export
 tws <- function(host = "localhost",
-                port = c("gwpaper", "gwprod", "twspaper", "twsprod"),
+                port = c("gwpaper", "gwlive", "twspaper", "twslive"),
                 inHandlers = "hl_record_stdout_val",
                 outHandlers = "hl_record_stdout_val",
                 ...) {
   if (is.character(port)) {
     port <- match.arg(port)
-    port <- c("gwpaper" = 4002, "gwprod" = 4001,
-              "twspaper" = 7497, "twsprod" = 7496)[[port]]
+    port <- c("gwpaper" = 4002, "gwlive" = 4001,
+              "twspaper" = 7497, "twslive" = 7496)[[port]]
   }
   TWS$new(inHandlers = inHandlers, outHandlers = outHandlers,
           host = host, port = port, ...)

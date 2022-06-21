@@ -1,7 +1,77 @@
 
 
+# Installation
 
-* Hopefully a comprehensive set of differences from the official cppclient implementation:
+Either download the stable client from
+https://interactivebrokers.github.io request access rights at the
+official [tws-api](https://github.com/InteractiveBrokers/tws-api)
+repo and pull directly from git.
+
+
+Set the path `TWS_API_LIB_PATH` env variable to
+`source/cppclient/client` directory from unpacked directory.
+
+Get the source of `rib` package:
+
+```
+git clone git@github.com:vspinu/rib.git
+```
+
+From R with devtools:
+
+```R
+Sys.setenv(TWS_API_LIB_PATH="/path/to/tws-api/source/cppclient/client")
+devtools::install("/path/to/rib/")
+```
+
+Or from CLI:
+
+```sh
+## instal deps from R if you don't have them
+# install.packages(c("rlang", "glue", "later"))
+
+cd /path/to/rib
+export TWS_API_LIB_PATH=/path/to/tws-api/source/cppclient/client
+R CMD install .
+```
+
+# Usage
+
+`rib` `tws` client processes inbound and outbound messages with a set
+of in- and out-handlers. Each handler receives the message and returns
+an optionally modifies message. If a handler returns NULL, the message
+is not passed to the next handler.
+
+
+```R
+
+library(rib)
+tws <- tws(port = "twspaper",
+           inHandlers = c(
+             c("hl_track_requests",      # standard handler that automatically saves and removes requess with an `id` field
+               "hl_process_callbacks",   # adds callback functionality
+               "hl_record_stdout_val" # record messages to stdout
+               )),
+           outHandlers =
+             c("hl_track_requests",
+               "hl_record_stdout_val")
+           )
+tws$open()
+
+contract <- twsCurrency(localSymbol = "EUR.USD")
+tws$reqContractDetails(contract)
+
+tws$reqHistoricalData(contract,
+                      durationStr = "1 D",
+                      whatToShow = "BID",
+                      barSizeSetting = "1 min",
+                      formatDate = 2)
+
+tws$close()
+
+```
+
+# Differences from the official cppclient implementation
 
   - Ticker messages:
     - `tickerId` is converted to `reqId` for consistency with other events
@@ -15,10 +85,12 @@
     whenever makes sense (`histogramData`, `softDollarTiers`, `familyCodes`,
     `mktDepthExchanges`, `smartComponents`, `newsProviders`)
 
-  - Streamline some parameter names for consistency and readability:
+  - Streamline some parameter names for consistency, simplicity or readability:
       `acctCode` -> `accountCode`,
       `reqMarketDataType`->`reqMktDataType`,
       `miscOptions` -> `options` etc
+      `durationStr` -> `duration` (string)
+      `barSizeSetting` -> `barSize` (string)
 
   - Convert string values to apropriate R types:
     + `updateAccountValue`: convert values to numeric whenever makes sense

@@ -2,25 +2,37 @@
 % Please edit documentation in R/handlers.R
 \name{handlers}
 \alias{handlers}
-\alias{hl_recorder}
-\alias{hl_record_stdout_str}
-\alias{hl_record_stdout_val}
-\alias{hl_decode_str}
-\alias{hl_track_requests}
-\alias{hl_process_callbacks}
+\alias{bld_recorder}
+\alias{hlr_record_stdout_str}
+\alias{hlr_record_stdout_val}
+\alias{hlr_decode_str}
+\alias{bld_save_history}
+\alias{hlr_track_requests}
+\alias{hlr_process_callbacks}
 \title{IB Handlers}
 \usage{
-hl_recorder(file = stdout(), type = c("val", "str"), ts_format = TS_FORMAT)
+bld_recorder(file = stdout(), type = c("val", "str"), ts_format = TS_FORMAT)
 
-hl_record_stdout_str(self, msg)
+hlr_record_stdout_str(self, msg)
 
-hl_record_stdout_val(self, msg)
+hlr_record_stdout_val(self, msg)
 
-hl_decode_str(self, msg)
+hlr_decode_str(self, msg)
 
-hl_track_requests(self, msg)
+bld_save_history(
+  path = "./history/",
+  contract_fields = "localSymbol",
+  req_fields = c("barSize", "whatToShow"),
+  per_file = 10000,
+  partition = c("none", "fields", "hive"),
+  format = c("rds", "parquet"),
+  binder = c("auto", "data.table", "dplyr"),
+  ...
+)
 
-hl_process_callbacks(self, msg)
+hlr_track_requests(self, msg)
+
+hlr_process_callbacks(self, msg)
 }
 \arguments{
 \item{file}{file to store the output, by default \code{\link[=stdout]{stdout()}}}

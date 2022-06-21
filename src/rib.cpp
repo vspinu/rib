@@ -147,18 +147,19 @@ cpp11::raws C_enc_cancelMktDepth(PREncoder encoder, long reqId, bool isSmartDept
 cpp11::raws C_enc_reqHistoricalData(PREncoder encoder,
 									cpp11::list contract,
 									const std::string& endDateTime,
-									const std::string& durationStr,
-									const std::string& barSizeSetting,
+									const std::string& duration,
+									const std::string& barSize,
 									const std::string& whatToShow,
-									bool useRTH, bool formatDate,
+									bool useRTH,
+                                    int formatDate,
 									bool keepUpToDate,
 									cpp11::list chartOptions,
 									long reqId) {
   BEG;
   client.reqHistoricalData(reqId,
 						   twsContract(contract),
-						   endDateTime, durationStr,
-						   barSizeSetting, whatToShow,
+						   endDateTime, duration,
+						   barSize, whatToShow,
 						   useRTH, formatDate, keepUpToDate,
 						   twsTagValueListSPtr(chartOptions));
   END;
