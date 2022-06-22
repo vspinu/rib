@@ -145,9 +145,6 @@ TWS <-
             addCallback = function(callback, event = NULL, reqId = self$nextId()) {
               if (is.null(event) && is.null(reqId))
                 stop("At least one of `event` and `reqId` must be non-null")
-              if (!identical(names(formals(callback)), c("self", "msg", "cid"))) {
-                stop("`callback`'s arguments must be `self`, `msg` and `cid`")
-              }
               cid <- if (is.null(event)) as.character(reqId)
                      else if (is.null(reqId)) list(event, length(self$callbacks[[event]]) + 1)
                      else paste(event, reqId, sep = ":")
@@ -201,6 +198,10 @@ TWS <-
             !!!REQ_FUNCTIONS
           ))
 
+
+
+## -- MSG Handling --
+
 tws_process_msgs <- function(self, read_interval = .1) {
   con <- self$con
   withCallingHandlers(
@@ -208,7 +209,7 @@ tws_process_msgs <- function(self, read_interval = .1) {
       while (self$isOpen()) {
         if (!socketSelect(list(con), FALSE, 0.25))
           next
-        tws_handle_inmsg(self)
+        tws_read_handle_inmsg(self)
       }
     } else {
       tws_later_scheduler(self, read_interval)
@@ -224,7 +225,7 @@ tws_later_scheduler <- function(self, read_interval = .1) {
   loop <- self$.__enclos_env__$private$loop
   executor <-
     function() {
-      while (self$isOpen() && tws_handle_inmsg(self)) {}
+      while (self$isOpen() && tws_read_handle_inmsg(self)) {}
       if (self$isOpen() && later::exists_loop(loop))
         later::later(executor, delay = read_interval, loop = loop)
     }
@@ -232,7 +233,32 @@ tws_later_scheduler <- function(self, read_interval = .1) {
   executor()
 }
 
-tws_handle_inmsg <- function(self) {
+inmsg <- function(event, val, ix = 1L, bin = NULL) {
+  structure(list(id = next_id(),
+                 ts = .POSIXct(Sys.time(), tz = "UTC"),
+                 ix = ix,
+                 bin = bin,
+                 event = event,
+                 val = val),
+            class = c("inmsg", "strlist"))
+}
+
+outmsg <- function(event, val) {
+  structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
+                 event = event,
+                 val = val),
+            class = c("outmsg", "strlist"))
+}
+
+is_outmsg <- function(msg) {
+  identical(class(msg)[[1]], "outmsg")
+}
+
+is_inmsg <- function(msg) {
+  identical(class(msg)[[1]], "inmsg")
+}
+
+tws_read_handle_inmsg <- function(self) {
   bin <- read_bin(self$con)
   if (is.null(bin)) {
     FALSE
@@ -240,46 +266,41 @@ tws_handle_inmsg <- function(self) {
     vals <- C_decode_bin(self$serverVersion, bin)
     ix <- 1L
     for (val in vals) {
-      msg <- structure(list(id = next_id(),
-                            ts = .POSIXct(Sys.time(), tz = "UTC"),
-                            ix = ix,
-                            bin = bin,
-                            event = val[["event"]],
-                            val = val),
-                       class = c("inmsg", "strlist"))
-      withCallingHandlers(
-        for (hl in self$inHandlers) {
-          stopif(is.null(msg))
-          msg <- do.call(hl, list(self, msg))
-          if (is.null(msg)) break
-        },
-        error = function(err) {
-          print(rlang::trace_back())
-          msg_name <- paste0("msg", self$clientId, "_", COUNTERS[["error"]])
-          dmp_name <- paste0("dmp", self$clientId, "_", COUNTERS[["error"]])
-          COUNTERS[["error"]] <- COUNTERS[["error"]] + 1
-          assign(msg_name, msg, envir = .GlobalEnv)
-          dump.frames(dmp_name)
-          cat(sprintf("Error frames dumped to `%s` in GlobalEnv\n", dmp_name))
-          cat(sprintf("Inbound message (bound to `%s` in GlobalEnv):\n", msg_name))
-          cat("ERROR:", err$message, "\n")
-          str(msg)
-          self$close()
-          cat("Closing connection", "\n")
-        })
+      msg <- inmsg(val[["event"]], val, ix, bin)
+      tws_handle_inmsg(self, msg)
       ix <- ix + 1L
     }
     TRUE
   }
 }
 
+tws_handle_inmsg <- function(self, msg) {
+  withCallingHandlers(
+    for (hl in self$inHandlers) {
+      stopif(is.null(msg))
+      msg <- do.call(hl, list(self, msg))
+      if (is.null(msg)) break
+    },
+    error = function(err) {
+      print(rlang::trace_back())
+      msg_name <- paste0("msg", self$clientId, "_", COUNTERS[["error"]])
+      dmp_name <- paste0("dmp", self$clientId, "_", COUNTERS[["error"]])
+      COUNTERS[["error"]] <- COUNTERS[["error"]] + 1
+      assign(msg_name, msg, envir = .GlobalEnv)
+      dump.frames(dmp_name)
+      cat(sprintf("Error frames dumped to `%s` in GlobalEnv\n", dmp_name))
+      cat(sprintf("Inbound message (bound to `%s` in GlobalEnv):\n", msg_name))
+      cat("ERROR:", err$message, "\n")
+      str(msg)
+      self$close()
+      cat("Closing connection", "\n")
+    })
+}
+
 tws_handle_outmsg <- function(self, event, encoder, val) {
   withCallingHandlers({
     if (length(self$outHandlers) > 0) {
-      msg <- structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
-                            event = event,
-                            val = val),
-                       class = c("outmsg", "strlist"))
+      msg <- outmsg(event, val)
       for (hl in self$outHandlers) {
         msg <- do.call(hl, list(self, msg))
         if (is.null(msg)) break
@@ -299,6 +320,12 @@ tws_handle_outmsg <- function(self, event, encoder, val) {
     stop(err)
   })
 }
+
+
+
+
+
+### -- Connection --
 
 tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
                         optionalCapabilities = "", timeout = 5,

@@ -18,19 +18,16 @@
 #'
 NULL
 
-is_outmsg <- function(msg) {
-  identical(class(msg)[[1]], "outmsg")
-}
-
-is_inmsg <- function(msg) {
-  identical(class(msg)[[1]], "inmsg")
-}
-
-#' @param file file to store the output, by default [`stdout()`]
+#' @param file
+#' @param type
+#' @param exclude
+#' @param include
 #' @param ts_format format for timestamps
 #' @rdname handlers
 #' @export
-bld_recorder <- function(file = stdout(), type = c("val", "str"), ts_format = TS_FORMAT) {
+bld_recorder <- function(file = stdout(), type = c("val", "str"),
+                         exclude = NULL, include = NULL,
+                         ts_format = TS_FORMAT) {
   type <- match.arg(type)
   function(self, msg) {
     if (self$record) {
@@ -38,17 +35,24 @@ bld_recorder <- function(file = stdout(), type = c("val", "str"), ts_format = TS
         msg <- hlr_decode_str(self, msg)
       }
       event <- msg$event
-      str <-
+      allow <- TRUE
+      if (!is.null(exclude))
+        allow <- !grepl(exclude, event)
+      if (!is.null(include))
+        allow <- allow && grepl(include, event)
+      if (allow) {
         if (type == "str") {
-          msg[["str"]]
+          str <- msg[["str"]]
         } else {
           val <- as.list(msg[["val"]])
           val[["event"]] <- NULL
-          gsub("list", "", as.character(list(val)), fixed = TRUE)
+          str <- gsub("list", "", as.character(list(val)), fixed = TRUE)
+          str <- gsub("\n", " ", str)
         }
-      ts <- format.POSIXct(msg$ts, ts_format, usetz = FALSE)
-      inout <- if (is_outmsg(msg)) "<-" else "->"
-      cat(ts, inout, event, str, "+ > \n", file = file, append = TRUE)
+        ts <- format.POSIXct(msg$ts, ts_format, usetz = FALSE)
+        inout <- if (is_outmsg(msg)) "<-" else "->"
+        cat(ts, inout, event, str, "\n", file = file, append = TRUE)
+      }
     }
     msg
   }
@@ -101,10 +105,10 @@ parse_hist_bar_time <- function(time, format = 2) {
 bld_save_history <- function(path = "history",
                              contract_fields = "localSymbol",
                              req_fields = c("barSize", "whatToShow"),
-                             per_file = 1e4,
                              partition = c("none", "fields", "hive"),
                              format = c("rds", "parquet"),
                              binder = c("auto", "data.table", "dplyr"),
+                             verbose = TRUE,
                              ...) {
   format <- match.arg(format)
   partition <- match.arg(partition)
@@ -141,7 +145,7 @@ bld_save_history <- function(path = "history",
       cacheid <- paste(c(reqid, req$contract[contract_fields], req[req_fields]), collapse = ":")
       env <- cache[[cacheid]]
       if (is.null(env)) {
-        cache[[cacheid]] <- env <- new.env(size = per_file)
+        cache[[cacheid]] <- env <- new.env(size = 1e4)
       }
 
       if (msg$event == "historicalData") {
@@ -149,7 +153,7 @@ bld_save_history <- function(path = "history",
         env[[bar$time]] <- bar
       }
 
-      if (msg$event == "historicalDataEnd" || length(env) >= per_file) {
+      if (msg$event == "historicalDataEnd") {
 
         cfields <- structure(req$contract[contract_fields], names = names(contract_fields))
         if (any(nulls <- sapply(cfields, is.null))) {
@@ -191,13 +195,16 @@ bld_save_history <- function(path = "history",
             arrow::write_parquet(df, file, ...)
           }
 
+          if (verbose) {
+            tws_handle_inmsg(self, inmsg("save_history", list(N = nrow(df), file = file)))
+          }
+
           rm(list = nms, envir = env)
 
         }
 
       }
 
-      return(NULL)
     }
 
     msg

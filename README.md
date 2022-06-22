@@ -47,27 +47,46 @@ is not passed to the next handler.
 
 library(rib)
 tws <- tws(port = "twspaper",
-           inHandlers = c(
-             c("hl_track_requests",      # standard handler that automatically saves and removes requess with an `id` field
-               "hl_process_callbacks",   # adds callback functionality
-               "hl_record_stdout_val" # record messages to stdout
-               )),
+           inHandlers =
+             c("hlr_track_requests",      # standard handler that automatically saves and removes requess with an `id` field
+               "hlr_process_callbacks",   # adds callback functionality
+               "hlr_record_stdout_val"    # record messages to stdout
+               ),
            outHandlers =
              c("hl_track_requests",
                "hl_record_stdout_val")
            )
 tws$open()
 
+tws$reqPositions()
+tws$reqAccountUpdates()
+tws$reqAccountSummary()
+
 contract <- twsCurrency(localSymbol = "EUR.USD")
 tws$reqContractDetails(contract)
 
-tws$reqHistoricalData(contract,
+tws$close()
+
+```
+
+## Historical Data
+
+```R
+
+hlr_save_history <-
+  bld_save_history(contract_fields = c(symbol = "localSymbol"),
+                   req_fields = c(wts = "whatToShow", bar = "barSize"),
+                   partition = "parquet")
+
+tws <- tws(port = "twspaper",
+           inHandlers = c("hlr_record_stdout_val"),
+           outHandlers = "hl_record_stdout_val")
+
+tws$reqHistoricalData(twsCurrency(localSymbol = "EUR.USD"),
                       durationStr = "1 D",
                       whatToShow = "BID",
-                      barSizeSetting = "1 min",
-                      formatDate = 2)
+                      barSizeSetting = "1 min")
 
-tws$close()
 
 ```
 

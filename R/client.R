@@ -73,6 +73,73 @@ enc_reqHistoricalData <- function(self, contract,
                           chartOptions = chartOptions)
 }
 
+
+bar2secs <-
+  c("1 secs"   = 1,
+    "5 secs"   = 5,
+    "10 secs"  = 10,
+    "15 secs"  = 15,
+    "30 secs"  = 30,
+    "1 min"    = 1 * 60,
+    "2 mins"   = 2 * 60,
+    "3 mins"   = 3 * 60,
+    "5 mins"   = 5 * 60,
+    "10 mins"  = 10 * 60,
+    "15 mins"  = 15 * 60,
+    "20 mins"  = 20 * 60,
+    "30 mins"  = 30 * 60,
+    "1 hour"   = 1 * 3600,
+    "4 hours"  = 4 * 3600,
+    "8 hours"  = 8 * 3600,
+    "1 day"    = 24 * 3600,
+    "1 week"   = 7 * 24 * 3600,
+    "1 month"  = 30 * 24 * 3600)
+
+reqHistoricalDataBatched <- function(contract,
+                                     startDateTime,
+                                     endDateTime = NULL,
+                                     barSize = BAR_SIZE_TYPES,
+                                     whatToShow = WHAT_TO_SHOW_TYPES,
+                                     useRTH = TRUE,
+                                     keepUpToDate = FALSE,
+                                     formatDate = 2,
+                                     chartOptions = list(),
+                                     batch_size = 5000) {
+  barSize <- match.arg(barSize)
+  interval <- batch_size * bar2secs[[barSize]]
+  if (interval < 86400) {
+    duration <- sprintf("%d S", interval)
+  } else {
+    days <- interval %/% 86400 + 1
+    duration <- sprintf("%d D", days)
+    interval <- days * 86400
+  }
+  endDateTime <- if (is.null(endDateTime)) Sys.time()
+                 else as.POSIXct(endDateTime)
+
+  end <- as.POSIXct(startDateTime)
+  beg <- end - interval
+
+  callback <- function(self, msg, cid) {
+    if (end < endDateTime) {
+      beg <<- end
+      end <<- end + interval
+      self$asyncid(~ self$reqHistoricalData(contract = contract,
+                                            endDateTime = end,
+                                            barSize = barSize,
+                                            duration = duration,
+                                            whatToShow = whatToShow,
+                                            useRTH = useRTH,
+                                            formatDate = formatDate,
+                                            chartOptions = chartOptions,
+                                            reqId = reqId),
+                   historicalDataEnd = callback)
+    }
+  }
+
+  callback(self)
+}
+
 enc_cancelHistoricalData <- function(self, reqId) {
   C_enc_cancelHistoricalData(self$encoder, reqId = reqId)
 }
@@ -467,3 +534,8 @@ REQ_FUNCTIONS <-
                      fn
                    }),
             names = sub("enc_", "", ENC_NAMES))
+
+## rib aditions
+for (nm in "reqHistoricalDataBatched") {
+  REQ_FUNCTIONS[[nm]] <- getFunction(nm)
+}
