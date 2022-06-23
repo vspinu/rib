@@ -44,8 +44,8 @@ C_enc_cancelMktDepth <- function(encoder, reqId, isSmartDepth) {
   .Call(`_rib_C_enc_cancelMktDepth`, encoder, reqId, isSmartDepth)
 }
 
-C_enc_reqHistoricalData <- function(encoder, contract, endDateTime, durationStr, barSizeSetting, whatToShow, useRTH, formatDate, keepUpToDate, chartOptions, reqId) {
-  .Call(`_rib_C_enc_reqHistoricalData`, encoder, contract, endDateTime, durationStr, barSizeSetting, whatToShow, useRTH, formatDate, keepUpToDate, chartOptions, reqId)
+C_enc_reqHistoricalData <- function(encoder, contract, endDateTime, duration, barSize, whatToShow, useRTH, formatDate, keepUpToDate, chartOptions, reqId) {
+  .Call(`_rib_C_enc_reqHistoricalData`, encoder, contract, endDateTime, duration, barSize, whatToShow, useRTH, formatDate, keepUpToDate, chartOptions, reqId)
 }
 
 C_enc_cancelHistoricalData <- function(encoder, reqId) {

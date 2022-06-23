@@ -341,7 +341,7 @@ tws_connect <- function(self, clientId = 1, host = 'localhost', port = 7496,
     self$close()
 
   start_time <- Sys.time()
-  con <- socketConnection(host = host, port = port, open = 'ab', blocking = blocking)
+  con <- socketConnection(host = host, port = port, open = 'r+b', blocking = blocking)
   self$con <- con
   on.exit(self$close())
 

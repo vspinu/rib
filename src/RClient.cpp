@@ -9,10 +9,10 @@ RClient::RClient(int serverVersion, RClientWrapper& rwrapper): EClient(&rwrapper
   assert(sizeof(unsigned) == HEADER_LEN);
   m_serverVersion = serverVersion;
 }
-RClient::~RClient() {};
+RClient::~RClient() {}
 
-REncoder::REncoder() : wrapper(), client(0, wrapper) {};
-REncoder::~REncoder() {};
+REncoder::REncoder() : wrapper(), client(0, wrapper) {}
+REncoder::~REncoder() {}
 
 bool RClient::closeAndSend(std::string msg, unsigned offset) {
   assert(msg.size() > offset + HEADER_LEN);
@@ -43,9 +43,7 @@ int RClient::bufferedSend(const std::string& msg) { return 0; }
 // DUMMIES
 void RClientWrapper::error(int id, int errorCode, const std::string& errorString) {
   REprintf("ENCODER: id:%d errorCode:%d %s\n", id, errorCode, errorString.c_str());
-};
+}
 RClientTransport::RClientTransport() {}
 RClientTransport::~RClientTransport() {}
 int RClientTransport::send(EMessage *pMsg) { return 0; }
-
-

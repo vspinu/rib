@@ -32,7 +32,7 @@ lst RSoftDollarTier(const SoftDollarTier& sdt) {
 	  "val"_nm = sdt.val(),
 	  "displayName"_nm = sdt.displayName()
 	});
-};
+}
 
 std::string RUsePriceMmgtAlgo(const UsePriceMmgtAlgo upma) {
   switch(upma) {
@@ -41,7 +41,7 @@ std::string RUsePriceMmgtAlgo(const UsePriceMmgtAlgo upma) {
    case UsePriceMmgtAlgo::DEFAULT: return "DEFAULT";
   }
   cpp11::stop("Invalid UsePriceMmgtAlgo enum value");
-};
+}
 
 std::string ROrigin(const Origin& origin) {
   switch(origin) {
@@ -50,7 +50,7 @@ std::string ROrigin(const Origin& origin) {
    case Origin::UNKNOWN: return "UNKNON";
   }
   cpp11::stop("Invalid Origin enum value");
-};
+}
 
 std::string RAuctionStrategy (int as){
   switch(as) {
@@ -59,7 +59,7 @@ std::string RAuctionStrategy (int as){
    case 3: return "TRANSPARENT";
    default: return "UNSET";
   }
-};
+}
 
 
 lst RWrapper::RContract(const Contract& contract) {
@@ -88,7 +88,7 @@ lst RWrapper::RContract(const Contract& contract) {
 	  // https://github.com/InteractiveBrokers/tws-api/blob/63403247a1c710fb41891581a60574ed623a17e6/source/cppclient/client/EOrderDecoder.cpp#L499
 	  /* "deltaNeutralContract"_nm = contrac.deltaNeutralContract */
 	});
-};
+}
 
 lst RWrapper::RContractDetails(const ContractDetails& cd) {
   return lst({

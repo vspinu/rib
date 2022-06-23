@@ -86,7 +86,7 @@ Simple constructors for inbound and outbound messages are exported functions `in
 
 ```R
 library(rib)
-tws <- tws(port = "twspaper",
+tws <- tws(port = "gwpaper",
            inHandlers =
              c("hlr_track_requests",      # remove requess from tws$requests on xyzEnd events
                "hlr_process_callbacks",   # adds callback functionality
@@ -110,7 +110,6 @@ tws$close()
 ```
 
 ## Historical Data
-
 
 ```R
 hlr_save_history <-
@@ -243,3 +242,9 @@ following steps are necessary:
 
    3. Add new requests to [R/client.R](R/client.R) and [src/rib.cpp](src/rib.cpp) accordingly
    https://github.com/InteractiveBrokers/tws-api/blob/master/source/cppclient/client/EClient.cpp#L34
+
+
+## Alternative R Client Implementations
+
+  [RBrokers](https://github.com/joshuaulrich/IBrokers) - older R client which works only with very old version of TWS Api
+  [ibilli/rib](https://github.com/lbilli/rib/) - fully featured R-only implementation that strives to preserve official C++/Java client programming paradigm.
