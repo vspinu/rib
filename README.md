@@ -3,13 +3,12 @@
 # Installation
 
 Either download the stable client from
-https://interactivebrokers.github.io request access rights at the
+https://interactivebrokers.github.io or request the access rights at the
 official [tws-api](https://github.com/InteractiveBrokers/tws-api)
 repo and pull directly from git.
 
 
-Set the path `TWS_API_LIB_PATH` env variable to
-`source/cppclient/client` directory from unpacked directory.
+Set the path `TWS_API_LIB_PATH` env variable to `source/cppclient/client` directory from IB client zip.
 
 Get the source of `rib` package:
 
