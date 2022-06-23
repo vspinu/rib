@@ -243,8 +243,12 @@ following steps are necessary:
    3. Add new requests to [R/client.R](R/client.R) and [src/rib.cpp](src/rib.cpp) accordingly
    https://github.com/InteractiveBrokers/tws-api/blob/master/source/cppclient/client/EClient.cpp#L34
 
+## What Does not Work Yet
+
+ - Some complex fields of the `Order` and `ContractDetails`  such as TagValueList and OrderComboLegList are not yet parsed to R objects.
+ - `twsOrder`: conditions and orderComboLegs fields not yet implemented
 
 ## Alternative R Client Implementations
 
-  [RBrokers](https://github.com/joshuaulrich/IBrokers) - older R client which works only with very old version of TWS Api
-  [ibilli/rib](https://github.com/lbilli/rib/) - fully featured R-only implementation that strives to preserve official C++/Java client programming paradigm.
+  - [ibilli/rib](https://github.com/lbilli/rib/) - fully featured R-only implementation that strives to preserve official C++/Java client programming paradigm.
+  - [RBrokers](https://github.com/joshuaulrich/IBrokers) - older R client which works only with very old version of TWS Api
