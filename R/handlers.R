@@ -18,10 +18,10 @@
 #'
 NULL
 
-#' @param file
-#' @param type
-#' @param exclude
-#' @param include
+#' @param file Where to record messages. Default to [`stdout()`]
+#' @param type Type of the recording, either the `val` slot of the message or `str` - string representation of the message.
+#' @param exclude Regular expression matching events that should not be recorded. NULL means no events are excluded.
+#' @param include Regular expression matching events that should be recorded. NULL means all events.
 #' @param ts_format format for timestamps
 #' @rdname handlers
 #' @export

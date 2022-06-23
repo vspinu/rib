@@ -11,7 +11,13 @@
 \alias{hlr_process_callbacks}
 \title{IB Handlers}
 \usage{
-bld_recorder(file = stdout(), type = c("val", "str"), ts_format = TS_FORMAT)
+bld_recorder(
+  file = stdout(),
+  type = c("val", "str"),
+  exclude = NULL,
+  include = NULL,
+  ts_format = TS_FORMAT
+)
 
 hlr_record_stdout_str(self, msg)
 
@@ -20,13 +26,13 @@ hlr_record_stdout_val(self, msg)
 hlr_decode_str(self, msg)
 
 bld_save_history(
-  path = "./history/",
+  path = "history",
   contract_fields = "localSymbol",
   req_fields = c("barSize", "whatToShow"),
-  per_file = 10000,
   partition = c("none", "fields", "hive"),
   format = c("rds", "parquet"),
   binder = c("auto", "data.table", "dplyr"),
+  verbose = TRUE,
   ...
 )
 
@@ -35,7 +41,13 @@ hlr_track_requests(self, msg)
 hlr_process_callbacks(self, msg)
 }
 \arguments{
-\item{file}{file to store the output, by default \code{\link[=stdout]{stdout()}}}
+\item{file}{Where to record messages. Default to \code{\link[=stdout]{stdout()}}}
+
+\item{type}{Type of the recording, either the \code{val} slot of the message or \code{str} - string representation of the message.}
+
+\item{exclude}{Regular expression matching events that should not be recorded. NULL means no events are excluded.}
+
+\item{include}{Regular expression matching events that should be recorded. NULL means all events.}
 
 \item{ts_format}{format for timestamps}
 
