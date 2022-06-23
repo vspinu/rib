@@ -74,26 +74,28 @@ enc_reqHistoricalData <- function(self, contract,
 }
 
 
-bar2secs <-
-  c("1 secs"   = 1,
-    "5 secs"   = 5,
-    "10 secs"  = 10,
-    "15 secs"  = 15,
-    "30 secs"  = 30,
-    "1 min"    = 1 * 60,
-    "2 mins"   = 2 * 60,
-    "3 mins"   = 3 * 60,
-    "5 mins"   = 5 * 60,
-    "10 mins"  = 10 * 60,
-    "15 mins"  = 15 * 60,
-    "20 mins"  = 20 * 60,
-    "30 mins"  = 30 * 60,
-    "1 hour"   = 1 * 3600,
-    "4 hours"  = 4 * 3600,
-    "8 hours"  = 8 * 3600,
-    "1 day"    = 24 * 3600,
-    "1 week"   = 7 * 24 * 3600,
-    "1 month"  = 30 * 24 * 3600)
+## For X-secs produce window < 86400 to avoid dealing with
+## IB's day-durations weirdness. 10000 is the default batch size.
+BATCH_WINDOW <-
+  10000 * c("1 sec"   = 8,
+            "5 secs"   = 8,
+            "10 secs"  = 8,
+            "15 secs"  = 8,
+            "30 secs"  = 8,
+            "1 min"    = 1 * 60,
+            "2 mins"   = 2 * 60,
+            "3 mins"   = 3 * 60,
+            "5 mins"   = 5 * 60,
+            "10 mins"  = 10 * 60,
+            "15 mins"  = 15 * 60,
+            "20 mins"  = 20 * 60,
+            "30 mins"  = 30 * 60,
+            "1 hour"   = 1 * 3600,
+            "4 hours"  = 4 * 3600,
+            "8 hours"  = 8 * 3600,
+            "1 day"    = 24 * 3600,
+            "1 week"   = 7 * 24 * 3600,
+            "1 month"  = 30 * 24 * 3600)
 
 reqHistoricalDataBatched <- function(contract,
                                      startDateTime,
@@ -104,26 +106,36 @@ reqHistoricalDataBatched <- function(contract,
                                      keepUpToDate = FALSE,
                                      formatDate = 2,
                                      chartOptions = list(),
-                                     batch_size = 5000) {
+                                     batch_window = BATCH_WINDOW[[barSize]]) {
   barSize <- match.arg(barSize)
-  interval <- batch_size * bar2secs[[barSize]]
-  if (interval < 86400) {
-    duration <- sprintf("%d S", interval)
+  if (batch_window < 86400) {
+    duration <- sprintf("%d S", batch_window)
   } else {
-    days <- interval %/% 86400 + 1
+    # Add an extra day to be on a safe side. IB seems to operate on
+    # trading days basis which sometimes results in shorter intervals
+    # than expected based on DateTime computation.
+    days <- batch_window %/% 86400 + 2
     duration <- sprintf("%d D", days)
-    interval <- days * 86400
   }
   endDateTime <- if (is.null(endDateTime)) Sys.time()
                  else as.POSIXct(endDateTime)
 
   end <- as.POSIXct(startDateTime)
-  beg <- end - interval
+  beg <- end - batch_window
+
+  error_callback <- function(self, msg, cid) {
+    ## handle no-data errors
+    if (msg$val$code == 162 && grepl("query returned no data", msg$val$message)) {
+      callback(self, msg, cid)
+    } else {
+      msg
+    }
+  }
 
   callback <- function(self, msg, cid) {
     if (end < endDateTime) {
       beg <<- end
-      end <<- end + interval
+      end <<- beg + batch_window
       self$asyncid(~ self$reqHistoricalData(contract = contract,
                                             endDateTime = end,
                                             barSize = barSize,
@@ -133,8 +145,10 @@ reqHistoricalDataBatched <- function(contract,
                                             formatDate = formatDate,
                                             chartOptions = chartOptions,
                                             reqId = reqId),
-                   historicalDataEnd = callback)
+                   historicalDataEnd = callback,
+                   error = error_callback)
     }
+    invisible(NULL)
   }
 
   callback(self)

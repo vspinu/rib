@@ -233,6 +233,7 @@ tws_later_scheduler <- function(self, read_interval = .1) {
   executor()
 }
 
+#' @export
 inmsg <- function(event, val, ix = 1L, bin = NULL) {
   structure(list(id = next_id(),
                  ts = .POSIXct(Sys.time(), tz = "UTC"),
@@ -243,6 +244,7 @@ inmsg <- function(event, val, ix = 1L, bin = NULL) {
             class = c("inmsg", "strlist"))
 }
 
+#' @export
 outmsg <- function(event, val) {
   structure(list(ts = .POSIXct(Sys.time(), tz = "UTC"),
                  event = event,

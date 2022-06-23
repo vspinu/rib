@@ -6,9 +6,9 @@ strenv <- function(..., parent = parent.frame()) {
 }
 
 #' @export
-strdfenv <- function(..., parent = parent.frame()) {
+strenvdf <- function(..., parent = parent.frame()) {
   structure(list2env(list2(...), parent = parent),
-            class = c("strdfenv", "environment"))
+            class = c("strenvdf", "environment"))
 }
 
 #' @export
@@ -61,7 +61,7 @@ print.strenv <- function(x, ...) {
   str.strenv(x)
 }
 
-stdfenv2dt <- function(x) {
+strenvdf2dt <- function(x) {
   dt <- suppressWarnings(rbindlist(as.list(x, all.names = T), fill = T, idcol = "key")) %>%
     discard_empty_cols()
   if (is.null(attr(x, "key"))) {
@@ -74,15 +74,15 @@ stdfenv2dt <- function(x) {
 }
 
 #' @export
-print.strdfenv <- function(x, ...) {
-  print(strdf2dt(x), ...)
+print.strenvdf <- function(x, ...) {
+  print(strenvdf2dt(x), ...)
 }
 
 #' @export
-str.stdfrenv <- function(object, give.attr = F, give.head = F, no.list = T,
+str.strenvdf <- function(object, give.attr = F, give.head = F, no.list = T,
                          indent.str = "", nest.lev = 0, ...) {
-  cat("[stdfrenv] ")
-  str(strdf2dt(object), give.attr = give.attr, give.head = F, nest.lev = nest.lev,  no.list = no.list, ...)
+  cat("[strenvdf] ")
+  str(strenvdf2dt(object), give.attr = give.attr, give.head = F, nest.lev = nest.lev,  no.list = no.list, ...)
 }
 
 catlog <- function(..., .env = parent.frame(), ts_format = TS_FORMAT) {
