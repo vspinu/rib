@@ -299,6 +299,7 @@ tws_handle_inmsg <- function(self, msg) {
 
 tws_handle_outmsg <- function(self, event, encoder, val) {
   withCallingHandlers({
+    bin <- NULL
     if (length(self$outHandlers) > 0) {
       msg <- outmsg(event, val)
       for (hl in self$outHandlers) {
@@ -312,7 +313,7 @@ tws_handle_outmsg <- function(self, event, encoder, val) {
       bin <- do.call(encoder, c(self, val))
     }
     # by now connection can be close and we get an "invalid connection" error
-    if (self$isOpen())
+    if (!is.null(bin) && self$isOpen())
       writeBin(bin, self$con)
   },
   error = function(err) {
