@@ -3,35 +3,13 @@
 # Installation
 
 Either download the stable client from
-https://interactivebrokers.github.io or request the access rights at the
-official [tws-api](https://github.com/InteractiveBrokers/tws-api)
-repo and pull directly from git.
+https://interactivebrokers.github.io or request the access rights at the official [tws-api](https://github.com/InteractiveBrokers/tws-api) repo and pull directly from git.
 
-
-Set the path `TWS_API_LIB_PATH` env variable to `source/cppclient/client` directory from IB client zip.
-
-Get the source of `rib` package:
-
-```
-git clone git@github.com:vspinu/rib.git
-```
-
-From R with devtools:
+Set the path `TWS_API_LIB_PATH` environment variable to `tws-api/source/cppclient/client` directory and install `rib` package normally.
 
 ```R
 Sys.setenv(TWS_API_LIB_PATH="/path/to/tws-api/source/cppclient/client")
-devtools::install("/path/to/rib/")
-```
-
-Or from CLI:
-
-```sh
-## instal deps from R if you don't have them
-# install.packages(c("rlang", "glue", "later"))
-
-cd /path/to/rib
-export TWS_API_LIB_PATH=/path/to/tws-api/source/cppclient/client
-R CMD install .
+devtools::install_github("vspinu/rib")
 ```
 
 ## Concepts
