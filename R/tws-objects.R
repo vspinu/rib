@@ -288,24 +288,35 @@ twsOrder <- function(orderId = 0,
   cl[[1]] <- as.name("list")
   env <- parent.frame()
   out <- structure(eval(cl, envir = env), class = c("twsOrder", "strlist"))
-  for (nm in names(order_par_options)) {
-    if (is.character(arg <- out[[nm]][[1]])) {
-      if (!arg %in% order_par_options[[nm]])
-        stop(sprintf("'%s' should be one of %s. Supplied: %s", nm,
-                     paste(dQuote(order_par_options[[nm]]), collapse = ", "),
-                     dQuote(arg)),
-             call. = FALSE)
-      out[[nm]] <- arg
-    }
-  }
   out
 }
 
-order_par_options <-
-  list(usePriceMgmtAlgo = c("default", "dont_use", "use"),
-       auctionStrategy = c("unset", "match", "improvement", "transparent"),
-       origin = c("customer", "firm", "unknown"))
+#' @name tws-objects
+#' @export
+twsOrderCondition <- function(type = c("Price", "Time", "Margin", "Execution", "Volume", "PercentChange"),
+                              isConjunctionConnection = FALSE,
+                              secType = NULL,
+                              percent = NULL,
+                              percentChange = NULL,
+                              price = NULL,
+                              triggerMethod = NULL,
+                              time = NULL,
+                              volume = NULL) {
+  type <- match.arg(type)
+  args <- list(type = type, isConjunctionConnection = isConjunctionConnection,
+               secType = secType, percent = percent, percentChange = percentChange,
+               price = price, triggerMethod = triggerMethod, time = time, volume = volume)
+  args <- args[!sapply(args, is.null)]
+  structure(args, class = c("twsOrderCondition", "strlist"))
+}
 
+twsOrderComboLeg <- function(...) {
+  stop("TODO")
+}
+
+twsComboLeg <- function(...) {
+  stop("TODO")
+}
 
 twsExecutionFilter <- function(...) {
   stop("TODO")

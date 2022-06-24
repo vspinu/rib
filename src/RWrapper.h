@@ -32,7 +32,6 @@ struct RWrapper : public EWrapper {
   lst RBar(const Bar& bar);
   lst RContractDescription(const ContractDescription& cd);
 
-
 };
 
 

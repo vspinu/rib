@@ -2,10 +2,17 @@
 
 #include "CommonDefs.h"
 #include "Contract.h"
-#include "Order.h"
 #include "Execution.h"
-#include "TagValue.h"
+#include "MarginCondition.h"
+#include "Order.h"
+#include "OrderCondition.h"
+#include "PercentChangeCondition.h"
+#include "PriceCondition.h"
 #include "ScannerSubscription.h"
+#include "TagValue.h"
+#include "TimeCondition.h"
+#include "VolumeCondition.h"
+#include "executioncondition.h"
 
 #include <memory>
 #include "assert.h"
@@ -53,6 +60,14 @@ T sexp2twsType(SEXP val, const std::string& name,
   cpp11::stop("Invalid '%s' argument", name);
 }
 
+// Not defined in Order.h
+typedef std::shared_ptr<OrderCondition> OrderConditionSPtr;
+typedef std::vector<OrderConditionSPtr> OrderConditionListSPtr;
+OrderConditionSPtr twsOrderConditionSPtr(lst in);
+OrderConditionListSPtr twsOrderConditionListSPtr(lst in);
+
+OrderComboLegSPtr twsOrderComboLegSPtr(lst in);
+Order::OrderComboLegListSPtr twsOrderComboLegListSPtr(lst in);
 ComboLegSPtr twsComboLegSPtr(lst in);
 Contract::ComboLegListSPtr twsComboLegsSPtr(lst in);
 TagValueListSPtr twsTagValueListSPtr(lst in);

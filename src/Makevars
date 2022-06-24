@@ -28,13 +28,10 @@ $(OBJECTS): libib.a
 libib.a: $(IB_OBJECTS) version.h
 	$(AR) rcs libib.a $(IB_OBJECTS)
 
-.PHONY: version.h
-version.h:
+version.h: $(TWS_API_LIB_PATH)/EDecoder.h
 	-sed -En '/^const int MIN_SERVER/h; $$x; s/.*= ([0-9]*);/#define MAX_SERVER_VERSION \1/; $$p' \
 		$(TWS_API_LIB_PATH)/EDecoder.h > version.h
 
 .PHONY: clean
 clean:
 	rm -f $(IB_OBJECTS) $(OBJECTS) libib.a rib.so
-
-

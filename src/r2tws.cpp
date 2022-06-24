@@ -1,4 +1,6 @@
 #include "r2tws.h"
+#include "cpp11/r_bool.hpp"
+#include <memory>
 
 #define STREQ(X, Y) !strcmp(X, Y)
 #define NMEQ(Y) !strcmp(nm, Y)
@@ -34,9 +36,38 @@ TagValueListSPtr twsTagValueListSPtr(lst in) {
   CONVEND;
 }
 
+
+Order::OrderComboLegListSPtr twsOrderComboLegListSPtr(lst in) {
+  size_t N = in.size();
+  Order::OrderComboLegListSPtr out(new Order::OrderComboLegList);
+  for (size_t i = 0; i < N; i++) {
+    out->push_back(twsOrderComboLegSPtr(in[i]));
+  }
+  return out;
+}
+
+OrderComboLegSPtr twsOrderComboLegSPtr(lst in) {
+  OrderComboLegSPtr out;
+  CONVBEG;
+  if (NMEQ("price"))
+    setcpp(out->price, in[i]);
+  CONVEND;
+}
+
+
+Contract::ComboLegListSPtr twsComboLegListSPtr(lst in) {
+  size_t N = in.size();
+  Contract::ComboLegListSPtr out(new Contract::ComboLegList);
+  for (size_t i = 0; i < N; i++) {
+    out->push_back(twsComboLegSPtr(in[i]));
+  }
+  return out;
+}
+
 ComboLegSPtr twsComboLegSPtr(lst in) {
   ComboLegSPtr out;
   CONVBEG;
+
   if (NMEQ("conId")) setcpp(out->conId, in[i]);
   else if (NMEQ("ratio")) setcpp(out->ratio, in[i]);
   else if (NMEQ("action")) setcpp(out->action, in[i]);
@@ -48,13 +79,110 @@ ComboLegSPtr twsComboLegSPtr(lst in) {
   CONVEND;
 }
 
-Contract::ComboLegListSPtr twsComboLegsSPtr(lst in) {
+
+OrderConditionListSPtr twsOrderConditionListSPtr(lst in) {
+  OrderConditionListSPtr out;
   size_t N = in.size();
-  Contract::ComboLegListSPtr cll(new Contract::ComboLegList);
   for (size_t i = 0; i < N; i++) {
-	cll->push_back(twsComboLegSPtr(in[i]));
+    out.push_back(twsOrderConditionSPtr(in[i]));
   }
-  return cll;
+  return out;
+}
+
+OrderConditionSPtr twsOrderConditionSPtr(lst in) {
+  using OCT = OrderCondition::OrderConditionType;
+  OCT type;
+  bool isConjunctionConnection;
+  CONVBEG;
+  if (NMEQ("type"))
+    type = sexp2twsType(
+        in[i], "twsOrderCondition:type",
+        std::vector<OCT>{OCT::Price, OCT::Time, OCT::Margin, OCT::Execution,OCT::Volume, OCT::PercentChange},
+        std::vector<string>{"Price", "Time", "Margin", "Execution", "Volume", "PercentChange"});
+  else if (NMEQ("isConjunctionConnection"))
+    isConjunctionConnection = cpp11::as_sexp(in[i]);
+  CLOSEPAREN;
+
+  OrderConditionSPtr out = OrderConditionSPtr(OrderCondition::create(type));
+
+  switch (type) {
+   case OrderCondition::Execution:
+     {
+       CONVBEG;
+       if (NMEQ("secType"))
+         std::static_pointer_cast<ExecutionCondition>(out)->secType(
+           cpp11::as_cpp<string>(in[i]));
+       else if (NMEQ("exchange"))
+         std::static_pointer_cast<ExecutionCondition>(out)->exchange(
+           cpp11::as_cpp<string>(in[i]));
+       else if (NMEQ("symbol"))
+         std::static_pointer_cast<ExecutionCondition>(out)->symbol(
+           cpp11::as_cpp<string>(in[i]));
+       CLOSEPAREN;
+     }
+     break;
+
+   case OrderCondition::Margin:
+     {
+       CONVBEG;
+       if (NMEQ("percent"))
+         std::static_pointer_cast<MarginCondition>(out)->percent(cpp11::as_cpp<int>(in[i]));
+       CLOSEPAREN;
+     }
+     break;
+
+   case OrderCondition::PercentChange:
+     {
+       CONVBEG;
+       if (NMEQ("percentChange"))
+         std::static_pointer_cast<PercentChangeCondition>(out)->changePercent(cpp11::as_cpp<double>(in[i]));
+       CLOSEPAREN;
+     }
+     break;
+
+   case OrderCondition::Price:
+     {
+       CONVBEG;
+       if ((NMEQ("price")))
+         std::static_pointer_cast<PriceCondition>(out)->price(cpp11::as_cpp<double>(in[i]));
+       else if (NMEQ("triggerMethod")) {
+         using M = PriceCondition::Method;
+         M method =
+           sexp2twsType(in[i], "twsOrderCondition:triggerMethod",
+                        std::vector<M>{M::Default, M::DoubleBidAsk, M::Last,
+                                       M::DoubleLast, M::BidAsk,
+                                       M::LastBidAsk, M::MidPoint},
+                        std::vector<string>{{"Default", "DoubleBidAsk",
+                                               "Last", "DoubleLast", "BidAsk",
+                                               "LastBidAsk", "MidPoint"}});
+         std::static_pointer_cast<PriceCondition>(out)->triggerMethod(method);
+       }
+       CLOSEPAREN;
+     }
+     break;
+
+   case OrderCondition::Time:
+     {
+       CONVBEG;
+        if (NMEQ("time"))
+          std::static_pointer_cast<TimeCondition>(out)->time(cpp11::as_cpp<string>(in[i]));
+       CLOSEPAREN;
+     }
+     break;
+
+   case OrderCondition::Volume:
+     {
+       CONVBEG;
+       if (NMEQ("volume"))
+         std::static_pointer_cast<VolumeCondition>(out)->volume(cpp11::as_cpp<int>(in[i]));
+       CLOSEPAREN;
+     }
+     break;
+  }
+
+  out->conjunctionConnection(isConjunctionConnection);
+
+  return out;
 }
 
 SoftDollarTier twsSoftDollarTier(lst in) {
@@ -101,7 +229,7 @@ Contract twsContract(lst in) {
   else if (NMEQ("secIdType")) setcpp(out.secIdType, in[i]);
   else if (NMEQ("secId")) setcpp(out.secId, in[i]);
   else if (NMEQ("comboLegsDescrip")) setcpp(out.comboLegsDescrip, in[i]);
-  else if (NMEQ("comboLegs")) out.comboLegs = twsComboLegsSPtr(in[i]);
+  else if (NMEQ("comboLegs")) out.comboLegs = twsComboLegListSPtr(in[i]);
   else cpp11::stop("Invalid 'twsContract' field '%s'", nm);
   CONVEND;
 }
@@ -147,7 +275,7 @@ Order twsOrder(lst in) {
   else if (NMEQ("faPercentage")) setcpp(out.faPercentage, in[i]);
   else if (NMEQ("openClose")) setcpp(out.openClose, in[i]);
   else if (NMEQ("origin"))
-	out.origin = sexp2twsType(in[i], "origin",
+	out.origin = sexp2twsType(in[i], "twsOrder:origin",
 							  std::vector<Origin>{CUSTOMER, FIRM, UNKNOWN},
 							  std::vector<std::string>{"customer", "firm", "unknown"});
   else if (NMEQ("shortSaleSlot")) setcpp(out.shortSaleSlot, in[i]);
@@ -156,11 +284,11 @@ Order twsOrder(lst in) {
   else if (NMEQ("discretionaryAmt")) setcpp(out.discretionaryAmt, in[i]);
   else if (NMEQ("optOutSmartRouting")) setcpp(out.optOutSmartRouting, in[i]);
   else if (NMEQ("auctionStrategy"))
-	out.auctionStrategy = sexp2twsType(in[i], "auctionStrategy",
+	out.auctionStrategy = sexp2twsType(in[i], "twsOrder:auctionStrategy",
 									   std::vector<AuctionStrategy>{AUCTION_UNSET, AUCTION_MATCH, AUCTION_IMPROVEMENT, AUCTION_TRANSPARENT},
 									   std::vector<std::string>{"unset", "match", "improvement", "transparent"});
   else if (NMEQ("usePriceMgmtAlgo"))
-	out.usePriceMgmtAlgo = sexp2twsType(in[i], "usePriceMgmtAlgo",
+	out.usePriceMgmtAlgo = sexp2twsType(in[i], "twsOrder:usePriceMgmtAlgo",
 										std::vector<UsePriceMmgtAlgo>{DONT_USE, USE, DEFAULT},
 										std::vector<std::string>{"dont_use", "use", "default"});
   else if (NMEQ("startingPrice")) setcpp(out.startingPrice, in[i]);
@@ -250,11 +378,8 @@ Order twsOrder(lst in) {
   else if (NMEQ("algoParams")) out.algoParams = twsTagValueListSPtr(in[i]);
   else if (NMEQ("smartComboRoutingParams")) out.smartComboRoutingParams = twsTagValueListSPtr(in[i]);
   else if (NMEQ("orderMiscOptions")) out.orderMiscOptions = twsTagValueListSPtr(in[i]);
-  // TODO:
-  else if (NMEQ("conditions")) cpp11::stop("'conditions' not implemented yet");
-  /* vector<shared_ptr<OrderCondition>> conditions; */
-  else if (NMEQ("orderComboLegs")) cpp11::stop("'orderComboLegs' not implemented yet");
-  /* OrderComboLegListSPtr orderComboLegs; */
+  else if (NMEQ("conditions")) out.conditions = twsOrderConditionListSPtr(in[i]);
+  else if (NMEQ("orderComboLegs")) out.orderComboLegs = twsOrderComboLegListSPtr(in[i]);
   else cpp11::stop("Invalid 'twsOrder' field '%s'", nm);
   CONVEND;
 }

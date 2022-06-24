@@ -81,7 +81,6 @@ lst RWrapper::RContract(const Contract& contract) {
 	  "secId"_nm = contract.secId,
 	  "comboLegsDescrip"_nm = contract.comboLegsDescrip
 
-	  // TODO
 	  /* typedef std::shared_ptr<ComboLegList> ComboLegListSPtr comboLegs; */
 
 	  // This one is a pointer which seems to be GC collected before it's even available:
