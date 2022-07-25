@@ -251,4 +251,4 @@ following steps are necessary:
 ## Alternative R Client Implementations
 
   - [ibilli/rib](https://github.com/lbilli/rib/) - fully featured R-only implementation that strives to preserve official C++/Java client programming paradigm.
-  - [RBrokers](https://github.com/joshuaulrich/IBrokers) - older R client which works only with very old version of TWS Api
+  - [IBrokers](https://github.com/joshuaulrich/IBrokers) - Original TWS client written entirely in R

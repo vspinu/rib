@@ -176,6 +176,7 @@ bld_save_history <- function(path = "history",
         }
 
         nms <- ls(envir = env)
+
         if (length(nms) > 0) {
 
           df <- bindfn(as.list(env))
